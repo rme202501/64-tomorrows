@@ -1,0 +1,85 @@
+variable,variable_name,unit,clim_sd_native,lead_hours,lead_label,lead_group,effective_sd_ratio,effective_sd_native
+ghi,Global horizontal irradiance,W/m²,280.0,1,+1h,hourly,0.201,56.378
+ghi,Global horizontal irradiance,W/m²,280.0,2,+2h,hourly,0.213,59.713
+ghi,Global horizontal irradiance,W/m²,280.0,3,+3h,hourly,0.245,68.729
+ghi,Global horizontal irradiance,W/m²,280.0,6,+6h,hourly,0.271,75.882
+ghi,Global horizontal irradiance,W/m²,280.0,9,+9h,hourly,0.363,101.743
+ghi,Global horizontal irradiance,W/m²,280.0,12,+12h,hourly,0.535,149.746
+ghi,Global horizontal irradiance,W/m²,280.0,18,+18h,hourly,0.468,130.902
+ghi,Global horizontal irradiance,W/m²,280.0,24,+24h,hourly,0.809,226.600
+ghi,Global horizontal irradiance,W/m²,280.0,48,day 2,daily,0.778,217.795
+ghi,Global horizontal irradiance,W/m²,280.0,72,day 3,daily,0.873,244.568
+ghi,Global horizontal irradiance,W/m²,280.0,96,day 4,daily,1.025,286.899
+ghi,Global horizontal irradiance,W/m²,280.0,120,day 5,daily,1.059,296.443
+ghi,Global horizontal irradiance,W/m²,280.0,144,day 6,daily,1.079,302.249
+ghi,Global horizontal irradiance,W/m²,280.0,168,day 7,daily,1.006,281.541
+cloud,Cloud fraction,(fraction),0.32,1,+1h,hourly,0.282,0.090
+cloud,Cloud fraction,(fraction),0.32,2,+2h,hourly,0.307,0.098
+cloud,Cloud fraction,(fraction),0.32,3,+3h,hourly,0.324,0.104
+cloud,Cloud fraction,(fraction),0.32,6,+6h,hourly,0.400,0.128
+cloud,Cloud fraction,(fraction),0.32,9,+9h,hourly,0.513,0.164
+cloud,Cloud fraction,(fraction),0.32,12,+12h,hourly,0.708,0.226
+cloud,Cloud fraction,(fraction),0.32,18,+18h,hourly,0.620,0.198
+cloud,Cloud fraction,(fraction),0.32,24,+24h,hourly,1.039,0.332
+cloud,Cloud fraction,(fraction),0.32,48,day 2,daily,0.990,0.317
+cloud,Cloud fraction,(fraction),0.32,72,day 3,daily,1.097,0.351
+cloud,Cloud fraction,(fraction),0.32,96,day 4,daily,1.181,0.378
+cloud,Cloud fraction,(fraction),0.32,120,day 5,daily,1.081,0.346
+cloud,Cloud fraction,(fraction),0.32,144,day 6,daily,1.187,0.380
+cloud,Cloud fraction,(fraction),0.32,168,day 7,daily,1.153,0.369
+t2m,2 m air temperature,°C,6.5,1,+1h,hourly,0.094,0.613
+t2m,2 m air temperature,°C,6.5,2,+2h,hourly,0.111,0.722
+t2m,2 m air temperature,°C,6.5,3,+3h,hourly,0.120,0.780
+t2m,2 m air temperature,°C,6.5,6,+6h,hourly,0.162,1.051
+t2m,2 m air temperature,°C,6.5,9,+9h,hourly,0.198,1.284
+t2m,2 m air temperature,°C,6.5,12,+12h,hourly,0.255,1.661
+t2m,2 m air temperature,°C,6.5,18,+18h,hourly,0.273,1.776
+t2m,2 m air temperature,°C,6.5,24,+24h,hourly,0.394,2.560
+t2m,2 m air temperature,°C,6.5,48,day 2,daily,0.613,3.986
+t2m,2 m air temperature,°C,6.5,72,day 3,daily,0.629,4.090
+t2m,2 m air temperature,°C,6.5,96,day 4,daily,0.728,4.731
+t2m,2 m air temperature,°C,6.5,120,day 5,daily,0.799,5.193
+t2m,2 m air temperature,°C,6.5,144,day 6,daily,0.858,5.576
+t2m,2 m air temperature,°C,6.5,168,day 7,daily,0.811,5.273
+wind,10 m wind speed,m/s,2.4,1,+1h,hourly,0.178,0.426
+wind,10 m wind speed,m/s,2.4,2,+2h,hourly,0.200,0.480
+wind,10 m wind speed,m/s,2.4,3,+3h,hourly,0.245,0.589
+wind,10 m wind speed,m/s,2.4,6,+6h,hourly,0.294,0.706
+wind,10 m wind speed,m/s,2.4,9,+9h,hourly,0.349,0.837
+wind,10 m wind speed,m/s,2.4,12,+12h,hourly,0.419,1.006
+wind,10 m wind speed,m/s,2.4,18,+18h,hourly,0.546,1.310
+wind,10 m wind speed,m/s,2.4,24,+24h,hourly,0.643,1.544
+wind,10 m wind speed,m/s,2.4,48,day 2,daily,0.889,2.133
+wind,10 m wind speed,m/s,2.4,72,day 3,daily,0.977,2.344
+wind,10 m wind speed,m/s,2.4,96,day 4,daily,1.085,2.603
+wind,10 m wind speed,m/s,2.4,120,day 5,daily,1.112,2.669
+wind,10 m wind speed,m/s,2.4,144,day 6,daily,1.204,2.890
+wind,10 m wind speed,m/s,2.4,168,day 7,daily,1.136,2.727
+precip,Precipitation (3 h total),mm,3.1,1,+1h,hourly,0.442,1.371
+precip,Precipitation (3 h total),mm,3.1,2,+2h,hourly,0.448,1.389
+precip,Precipitation (3 h total),mm,3.1,3,+3h,hourly,0.517,1.602
+precip,Precipitation (3 h total),mm,3.1,6,+6h,hourly,0.707,2.191
+precip,Precipitation (3 h total),mm,3.1,9,+9h,hourly,0.824,2.553
+precip,Precipitation (3 h total),mm,3.1,12,+12h,hourly,0.915,2.837
+precip,Precipitation (3 h total),mm,3.1,18,+18h,hourly,1.075,3.333
+precip,Precipitation (3 h total),mm,3.1,24,+24h,hourly,1.158,3.590
+precip,Precipitation (3 h total),mm,3.1,48,day 2,daily,1.425,4.417
+precip,Precipitation (3 h total),mm,3.1,72,day 3,daily,1.271,3.941
+precip,Precipitation (3 h total),mm,3.1,96,day 4,daily,1.335,4.138
+precip,Precipitation (3 h total),mm,3.1,120,day 5,daily,1.314,4.074
+precip,Precipitation (3 h total),mm,3.1,144,day 6,daily,1.301,4.032
+precip,Precipitation (3 h total),mm,3.1,168,day 7,daily,1.272,3.945
+rh,Relative humidity,%,14.0,1,+1h,hourly,0.186,2.602
+rh,Relative humidity,%,14.0,2,+2h,hourly,0.212,2.970
+rh,Relative humidity,%,14.0,3,+3h,hourly,0.219,3.067
+rh,Relative humidity,%,14.0,6,+6h,hourly,0.276,3.863
+rh,Relative humidity,%,14.0,9,+9h,hourly,0.316,4.426
+rh,Relative humidity,%,14.0,12,+12h,hourly,0.444,6.221
+rh,Relative humidity,%,14.0,18,+18h,hourly,0.464,6.498
+rh,Relative humidity,%,14.0,24,+24h,hourly,0.684,9.571
+rh,Relative humidity,%,14.0,48,day 2,daily,0.873,12.224
+rh,Relative humidity,%,14.0,72,day 3,daily,0.904,12.654
+rh,Relative humidity,%,14.0,96,day 4,daily,0.944,13.210
+rh,Relative humidity,%,14.0,120,day 5,daily,1.085,15.187
+rh,Relative humidity,%,14.0,144,day 6,daily,0.989,13.851
+rh,Relative humidity,%,14.0,168,day 7,daily,1.116,15.619

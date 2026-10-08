@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>64 Tomorrows</title>
+  <meta name="description" content="What Google's WeatherNext 3 ensemble forecast says about the next week in New England, and how sure it is.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Ccircle cx=%228%22 cy=%228%22 r=%226%22 fill=%22%232a78d6%22/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+</head>
+<body>
+  <header class="top">
+    <span class="brand">64 Tomorrows</span>
+    <nav>
+      <a href="#day">Your day</a>
+      <a href="#sure">How sure?</a>
+      <a href="#explore">Explore</a>
+    </nav>
+    <button class="theme-toggle" type="button" aria-label="Toggle dark mode">◐</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="kicker">CS1710 final project · Henry Mattoni, Ryan Eto, Luke Tan</p>
+      <h1>One forecast is really 64 possible tomorrows</h1>
+      <p class="lede">Google's WeatherNext 3 AI model doesn't make one forecast. It makes 64 slightly different ones and
+        lets them disagree. This site uses that disagreement to answer everyday questions about New England weather,
+        and shows you how far ahead you can trust each answer.</p>
+      <p class="run-info" id="run-info"></p>
+    </section>
+
+    <h2 class="part" id="day"><span>Part 1</span> Your day</h2>
+
+    <section class="view" data-view="tempSpread">
+      <h3>What will the temperature be over the next two days?</h3>
+      <p>The line is the most likely temperature. The shaded band is where 8 in 10 of the forecasts land, and the darker
+        inner band holds the middle half. A wide band means the forecasts disagree.</p>
+      <div class="controls"></div>
+      <div class="chart"></div>
+    </section>
+
+    <section class="view" data-view="feelsMap">
+      <h3>What will it feel like outside, and what can I do?</h3>
+      <p>Wind chill and humidity combined with temperature. Pick an activity to see where and when conditions are good,
+        and click a town for its hour-by-hour outlook.</p>
+      <div class="controls"></div>
+      <div class="map-wrap"></div>
+      <div class="legend"></div>
+      <div class="detail"></div>
+    </section>
+
+    <section class="view" data-view="cloudMap">
+      <h3>What does a day of cloud cover look like?</h3>
+      <p>Press play to watch clouds move across New England. Below the map: the sunshine reaching the ground in Boston.</p>
+      <div class="controls"></div>
+      <div class="map-wrap"></div>
+      <div class="legend"></div>
+      <div class="inset"></div>
+    </section>
+
+    <section class="view" data-view="freezeTimeline">
+      <h3>Will there be freezing precipitation this week?</h3>
+      <p>Chance of any precipitation, and of precipitation while it is below freezing (snow, sleet, freezing rain).
+        Hatched spans show when ice would likely still be on the ground.</p>
+      <div class="controls"></div>
+      <div class="legend legend-swatches static">
+        <span><i style="background:var(--series-1);opacity:.35"></i>Any precipitation</span>
+        <span><i style="background:var(--series-7)"></i>Freezing precipitation</span>
+        <span><i class="hatch"></i>Ice likely on the ground</span>
+      </div>
+      <div class="chart"></div>
+      <p class="note"></p>
+    </section>
+
+    <h2 class="part" id="sure"><span>Part 2</span> How sure is the forecast?</h2>
+
+    <section class="view" data-view="rangeGrowth">
+      <h3>How fast does the uncertainty grow?</h3>
+      <p>The gap between the 1-in-10 high and 1-in-10 low forecast, for four very different places. It starts narrow
+        and spreads out as the days go by, faster on a mountaintop than at the coast.</p>
+      <div class="controls"></div>
+      <div class="chart"></div>
+      <div class="legend"></div>
+    </section>
+
+    <section class="view" data-view="fogMap">
+      <h3>The forecast gets foggier the further ahead you look</h3>
+      <p>Temperature map with a fog layer: the more the 64 forecasts disagree, the thicker the fog. Press play to look
+        a week ahead.</p>
+      <div class="controls"></div>
+      <div class="map-wrap"></div>
+      <div class="legend"></div>
+    </section>
+
+    <section class="view" data-view="horizonMap">
+      <h3>How many days ahead can I trust the forecast here?</h3>
+      <p>Each place gets a "trust horizon": the first time its forecasts spread wider than the limit you choose. Lines
+        mark 1, 2, 3 ... days.</p>
+      <div class="split">
+        <div class="stat"></div>
+        <div class="controls"></div>
+      </div>
+      <div class="map-wrap"></div>
+      <div class="legend"></div>
+    </section>
+
+    <section class="view" data-view="roulette">
+      <h3>Forecast roulette: what does "40% chance" really mean?</h3>
+      <p>Each spin picks one possible future out of the forecast's range and maps it. Spin many times, and the share of
+        spins with rain (or warmth) settles on the forecast's probability.</p>
+      <div class="controls"></div>
+      <div class="roulette-grid">
+        <div class="reel"></div>
+        <div class="tally"></div>
+      </div>
+      <div class="map-wrap"></div>
+      <div class="legend"></div>
+      <p class="caveat">Simplification: each spin uses the same percentile everywhere on the map, so a spin shows a
+        consistently warm (or wet) future, not a real single forecast run.</p>
+    </section>
+
+    <h2 class="part" id="explore"><span>Part 3</span> Explore</h2>
+
+    <section class="view" data-view="windFlow">
+      <h3>Which way is the wind blowing?</h3>
+      <p>Each streak follows the wind. Orange streaks are where the forecasts disagree on wind speed.</p>
+      <div class="controls"></div>
+      <div class="map-wrap"></div>
+      <div class="legend"></div>
+    </section>
+
+    <section class="view" data-view="timeMachine">
+      <h3>Forecast time machine: how did the forecast change?</h3>
+      <p>Pick a moment. Each bar is what an earlier forecast run predicted for it, oldest on the left. Forecasts
+        usually wobble and then narrow as the moment gets closer. Click a bar to map how that run differed from the
+        newest one.</p>
+      <div class="controls"></div>
+      <div class="chart"></div>
+      <div class="map-wrap"></div>
+      <div class="legend"></div>
+    </section>
+
+    <section class="view" data-view="stormCone">
+      <h3>Where could the storm go?</h3>
+      <p>Tracked low-pressure systems over the next week. Pick one to build its cone of possible positions, like a
+        hurricane cone, and slide through time.</p>
+      <div class="controls"></div>
+      <div class="map-wrap"></div>
+      <p class="info"></p>
+    </section>
+
+    <section class="view" data-view="routePlanner">
+      <h3>When should I leave?</h3>
+      <p>Draw your trip on the map. The chart shows conditions along the route (bottom = start, top = end) for every
+        departure time over the next two days. The outlined column is the best time to go.</p>
+      <div class="controls"></div>
+      <div class="map-wrap"></div>
+      <div class="chart"></div>
+      <p class="info"></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Data: Google WeatherNext 3 ensemble statistics (mean and 10th-90th percentiles of 64 members),
+      <code>gs://weathernext3_statistics_spatial</code>. Maps: us-atlas, world-atlas.</p>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

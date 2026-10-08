@@ -1,0 +1,18 @@
+This week, your team will meet with your assigned Teaching Fellow for a 15-minute project check. This conversation is meant to help us understand where your project stands, hear your reasoning, and help you resolve open questions before you commit to an implementation.
+
+Your TF will send you a sign-up link with available time slots. All team members must attend. Please arrive on time; the schedule is tight and we cannot extend your slot if you are late.
+
+As a group, prepare the following before your check:
+
+Bring your process book, up to date through this week's milestone. You do not need to prepare slides. Have your sketches, your data, and any code you have written open and ready to show. Screen sharing your process book and a browser window is sufficient.
+Prepare a 3-4 minute walkthrough of your project so far. Cover: (a) your topic and the story you want to tell, (b) your data source and what it actually contains, (c) the key questions you are answering, and (d) the sketches you selected and why.
+Be ready to show your work. While we know you have uploaded your project files to Canvas throughout the semester, it is helpful for you to have a copy of the relevant files open. This will help you describe the work you have done and justify any decisions made.
+Be prepared to explain your process.
+If you are facing obstacles or would like feedback on parts of your project, come with specific questions prepared. This meeting is also your opportunity to get the guidance you need.
+During the check, your TF will ask questions about the data, your design decisions, and your plan. Every team member must be prepared to answer questions about any part of the project, including parts they did not personally work on. We will direct questions to individual students, not to the team as a whole. This is a check that everyone on the team understands the project you are building together.
+
+Your TF will record written feedback in your process book within a few days of the check. Read it carefully; it is meant to inform your prototype.
+
+If you cannot attend for an approved reason, notify your TF before the check and complete an individual makeup with a TF within one week.
+
+Project checks are audio recorded so that the teaching staff can review grades consistently across teams. Recordings are accessible only to the teaching staff, are used only for grading and grade review, and are deleted at the end of the spring semester. If you have concerns about being recorded, contact the instructor before the first project check so that we can make another arrangement.
