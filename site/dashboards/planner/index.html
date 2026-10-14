@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Outdoor Activity Planner · 64 Tomorrows</title>
+  <meta name="description" content="Pick an activity, place and time window to see temperature range, precipitation and freezing risk across New England.">
+  <meta name="data-root" content="../../data/">
+  <meta name="field-format" content="bin">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Ccircle cx=%228%22 cy=%228%22 r=%226%22 fill=%22%232a78d6%22/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="../shared.css">
+  <style>
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.toolbar .label { font-size: 14px; color: var(--text-secondary); }
+.summary-head { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; justify-content: space-between; }
+.summary-head h2 { font-size: 18px; }
+.summary-head .when { font-size: 13px; color: var(--text-secondary); }
+.summary-head .when b { color: var(--text-primary); font-weight: 600; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tile { background: var(--page); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile .k { font-size: 12px; color: var(--muted); }
+.tile .v { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.tile .s { font-size: 12px; color: var(--text-secondary); }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; width: fit-content; color: var(--text-primary); }
+.pill i { width: 8px; height: 8px; border-radius: 50%; }
+.verdict-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 4px; background: var(--grid); }
+.verdict-bar span { display: block; height: 100%; }
+.ice-span { fill: url(#ice-hatch); pointer-events: none; }
+#ice-hatch line { stroke: var(--muted); stroke-width: 1.5; }
+.swatch.window { background: color-mix(in srgb, var(--accent) 10%, transparent); outline: 1px dashed var(--accent); outline-offset: -1px; }
+.go-span { fill: var(--good-tint); pointer-events: none; }
+.go-edge { stroke: var(--good); stroke-width: 2; pointer-events: none; }
+.note { margin: 0; font-size: 13px; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.note b { color: var(--text-primary); }
+  </style>
+</head>
+<body>
+  <!-- topbar -->
+  <header class="top">
+    <div class="top-inner">
+      <a class="brand" href="../../">64 Tomorrows</a>
+      <nav aria-label="Dashboards">
+        <a href="../uncertainty/">How sure is it?</a>
+        <a href="../planner/" aria-current="page">Plan your day</a>
+      </nav>
+      <button class="theme-toggle" type="button" aria-label="Toggle dark mode">◐</button>
+    </div>
+  </header>
+  <!-- /topbar -->
+
+<div class="wrap">
+  <header class="head">
+    <p class="eyebrow">64 Tomorrows · Plan your day</p>
+    <h1>Is it a good time to get outside?</h1>
+    <p class="lede">Pick an activity, a place and a time window. The map rates every part of New England for that window, and the two charts show how warm it will be, whether rain or ice is likely, and how much the 64 forecast runs agree.</p>
+    <p class="run" id="run-info">Loading forecast run…</p>
+  </header>
+
+  <div class="toolbar">
+    <span class="label">Activity</span>
+    <div id="activity"></div>
+  </div>
+
+  <div class="board" id="board">
+    <section class="panel" aria-labelledby="map-title">
+      <div class="panel-head">
+        <h2 id="map-title">Feels like and activity conditions</h2>
+        <p class="question" id="map-question">Where is it good to go?</p>
+      </div>
+      <div class="controls" id="map-mode"></div>
+      <div id="map" class="loading">Loading forecast data…</div>
+      <div class="legend" id="map-legend"></div>
+      <p class="hint"><b>Click the map</b> to see the forecast for that spot in the charts.</p>
+    </section>
+
+    <div class="stack">
+      <section class="panel" aria-labelledby="place-title">
+        <div class="summary-head">
+          <h2 id="place-title">…</h2>
+          <span class="when" id="window-text"></span>
+        </div>
+        <div class="tiles" id="tiles"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="fan-title">
+        <div class="panel-head">
+          <h2 id="fan-title">Temperature and how sure it is</h2>
+          <p class="question">How warm will it be?</p>
+        </div>
+        <div class="chart" id="fan"></div>
+        <div class="legend" id="fan-legend"></div>
+        <p class="hint"><b>Drag across the chart</b> to choose your time window. The map and summary update to match. <b>Click</b> to center a 12-hour window.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="precip-title">
+        <div class="panel-head">
+          <h2 id="precip-title">Precipitation and freezing risk</h2>
+          <p class="question">Will it rain, or ice over?</p>
+        </div>
+        <div class="chart" id="precip"></div>
+        <div class="legend" id="precip-legend"></div>
+        <p class="note" id="precip-note"></p>
+      </section>
+    </div>
+  </div>
+
+  <p class="foot">Data: Google WeatherNext 3 ensemble statistics, run of 7 Oct 2026 12Z, New England at 0.2° (about 22 km). Feels like uses the NWS wind chill and heat index. Chances of precipitation and freezing precipitation are estimated from the 10th to 90th percentiles of the 64 runs. Activity ratings combine feels-like temperature, precipitation chance and wind. Ice stays on the ground from the first hour with a 20% or higher chance of freezing precipitation until it stays above 36°F for 6 hours.</p>
+</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+  <script src="../shared.js"></script>
+  <script src="../planner.js"></script>
+</body>
+</html>
