@@ -14,11 +14,6 @@
   <header class="top">
     <span class="brand">64 Tomorrows</span>
     <nav>
-      <a href="#hook">Hook</a>
-      <a href="#rising">Insights</a>
-      <a href="#message">Main message</a>
-      <a href="#solution">Solution</a>
-      <a href="#explore">Explore</a>
       <a href="dashboards/uncertainty/">Dashboards</a>
     </nav>
     <button class="theme-toggle" type="button" aria-label="Toggle dark mode">◐</button>
@@ -49,22 +44,18 @@
       </div>
       <div class="steps">
         <div class="step"><div>
-          <p class="step-kicker">Step 1</p>
           <p>A weather app shows one number. For Boston around <span data-val="hook-day"></span>, it is the temperature on
             the card, and it is the whole forecast you see.</p>
         </div></div>
         <div class="step"><div>
-          <p class="step-kicker">Step 2</p>
           <p>The model makes 64 forecasts for the same hour. The shaded fan is where they land. The darker band holds the
             middle half of them; the lighter band holds 8 in 10.</p>
         </div></div>
         <div class="step"><div>
-          <p class="step-kicker">Step 3</p>
           <p>The dashed lines are the far ends: 1 in 10 forecasts sits below the lower one, and 1 in 10 above the upper.
             The app's number is one point in between.</p>
         </div></div>
         <div class="step"><div>
-          <p class="step-kicker">Step 4</p>
           <p>A week out, the fan opens up. At <span data-val="hook-week"></span> the 64 forecasts sit about
             <span data-val="hook-gap-week"></span>°F apart, and the one number hides all of it.</p>
         </div></div>
@@ -81,26 +72,21 @@
       </div>
       <div class="steps">
         <div class="step"><div>
-          <p class="step-kicker">Step 1 · Two days out</p>
           <p>For Boston, the gap between the 1-in-10 high and the 1-in-10 low is about <span data-val="growth-day"></span>°F
             at +24 hours. The forecasts mostly agree.</p>
         </div></div>
         <div class="step"><div>
-          <p class="step-kicker">Step 2 · A week out</p>
           <p>The same gap grows to about <span data-val="growth-week"></span>°F by +168 hours. Uncertainty widens with lead time.</p>
         </div></div>
         <div class="step"><div>
-          <p class="step-kicker">Step 3 · It depends on where</p>
           <p>At +144 hours the gap is <span data-val="growth-mt"></span>°F on Mt Washington and
             <span data-val="growth-cape"></span>°F on Cape Cod. The same week, very different certainty.</p>
         </div></div>
         <div class="step"><div>
-          <p class="step-kicker">Step 4 · Then it jumps</p>
           <p>Between +144 and +150 hours, Boston's gap goes from <span data-val="growth-jump-from"></span>°F to
             <span data-val="growth-jump-to"></span>°F. It is a step, not a slope, and a single line cannot show it.</p>
         </div></div>
         <div class="step"><div>
-          <p class="step-kicker">Step 5 · It depends on what</p>
           <p>Wind and rain follow their own patterns. Switch to wind and the gaps are different in every place, so there
             is no single "how sure is the forecast" number.</p>
         </div></div>
@@ -116,22 +102,18 @@
       </div>
       <div class="steps">
         <div class="step"><div>
-          <p class="step-kicker">Step 1 · The app's choice</p>
           <p>Your app picks one future for each day and shows it as the truth. Bars show how far apart the 64 forecasts
             were on each day, for all 12 towns.</p>
         </div></div>
         <div class="step"><div>
-          <p class="step-kicker">Step 2 · Thursday to Saturday</p>
           <p>The forecasts mostly agree. The widest hour across these three days is <span data-val="cav-agree-max"></span>°F
             apart, inside the 7°F trust limit. In the short term the one number is a fair summary.</p>
         </div></div>
         <div class="step"><div>
-          <p class="step-kicker">Step 3 · Sunday and Monday</p>
           <p>Some hours spread past 7°F. On Monday, <span data-val="cav-day-over"></span>% of hours are past the limit.
             This is where the single number starts to be a choice.</p>
         </div></div>
         <div class="step"><div>
-          <p class="step-kicker">Step 4 · Tuesday and Wednesday</p>
           <p>On Wednesday, <span data-val="cav-end-over"></span>% of hours (up to 8 AM) are past the limit, and the typical
             gap is <span data-val="cav-end-mean"></span>°F. Keyword: usually. Most days are fine. The extreme ones are
             where the app's number misleads.</p>
@@ -148,20 +130,16 @@
       </div>
       <div class="steps">
         <div class="step"><div>
-          <p class="step-kicker">Step 1 · Trust horizon</p>
           <p>A trust horizon is how many days ahead a forecast stays inside the 7°F limit. Each town gets one. In this run
             most towns hold about four days.</p>
         </div></div>
         <div class="step"><div>
-          <p class="step-kicker">Step 2 · Shortest</p>
           <p><span data-val="hz-short"></span> loses the forecast first, at <span data-val="hz-short-days"></span> days.</p>
         </div></div>
         <div class="step"><div>
-          <p class="step-kicker">Step 3 · Longest</p>
           <p><span data-val="hz-long"></span> keeps it longest, at <span data-val="hz-long-days"></span> days.</p>
         </div></div>
         <div class="step"><div>
-          <p class="step-kicker">Step 4 · Coast or inland?</p>
           <p>Not a clean split. Coastal towns average <span data-val="hz-coast"></span> days and inland towns
             <span data-val="hz-inland"></span>. Read the horizon for your own town, and treat anything past it as a range.</p>
         </div></div>
@@ -171,7 +149,7 @@
 
     <p class="cta"><a href="dashboards/uncertainty/">Open the trust-horizon dashboard</a> ·
       <a href="dashboards/planner/">Open the planning dashboard</a></p>
-    <h2 class="part" id="explore">Beyond the story</h2>
+    <h2 class="part" id="explore">More views</h2>
 
     <section class="view" data-view="tempSpread">
       <h3>What will the temperature be over the next two days?</h3>
