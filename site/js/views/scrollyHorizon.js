@@ -3,7 +3,7 @@ import { frame, responsive } from "../chart.js";
 import { SERIES, onThemeChange } from "../theme.js";
 import { watchSteps, fillValues } from "../scrolly.js";
 
-// Act 4 (solution): for each town, how many days ahead the forecast stays
+// Solution: for each town, how many days ahead the forecast stays
 // inside the 7 °F trust limit (the same limit the trust-horizon map uses).
 
 const LIMIT_C = 7 * 5 / 9;

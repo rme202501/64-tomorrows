@@ -87,7 +87,7 @@ python3 -m http.server --directory site 8731
 
 Check-prep docs: `docs/walkthrough.md`, `docs/qa_prep.md`, `docs/process_book_m5.md`.
 
-## Prototype V1 (storyline)
+## Storyline
 
 The site is a scrollytelling page that follows the Milestone 7 storyboard in four acts. Each act is a sticky chart
 with step cards; scrolling changes what the chart shows:

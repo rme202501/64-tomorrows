@@ -3,7 +3,7 @@ import { frame, responsive, timeAxis, yAxis } from "../chart.js";
 import { SERIES, fmtTime, onThemeChange } from "../theme.js";
 import { watchSteps, fillValues } from "../scrolly.js";
 
-// Act 2 (rising insights): how far apart the forecasts spread, and how that
+// Rising insights: how far apart the forecasts spread, and how that
 // changes with lead time, place, variable and a sudden jump.
 
 const PLACES = ["Boston", "Pittsfield", "Cape Cod", "Mt Washington"];

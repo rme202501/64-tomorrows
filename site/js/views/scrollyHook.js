@@ -3,7 +3,7 @@ import { frame, responsive, timeAxis, yAxis } from "../chart.js";
 import { cToF, fmtTime, SERIES, onThemeChange } from "../theme.js";
 import { watchSteps, fillValues } from "../scrolly.js";
 
-// Act 1 (hook): one app-style number, then the fan it was picked from.
+// Hook: one app-style number, then the fan it was picked from.
 // Each scroll step changes what the chart reveals.
 
 const TOWN = "Boston";

@@ -3,7 +3,7 @@ import { frame, responsive } from "../chart.js";
 import { SERIES, onThemeChange } from "../theme.js";
 import { watchSteps, fillValues } from "../scrolly.js";
 
-// Act 3 (main message): the single number hides a day-by-day caveat.
+// Main message: the single number hides a day-by-day caveat.
 // Bars show how far apart the 64 forecasts were on each local day; the dashed
 // line is the 7 °F trust limit the trust-horizon map already uses.
 
