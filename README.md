@@ -89,10 +89,15 @@ Check-prep docs: `docs/walkthrough.md`, `docs/qa_prep.md`, `docs/process_book_m5
 
 ## Prototype V1 (storyline)
 
-The site follows the Milestone 7 storyboard in four acts: **Hook** (`fanHook`, one number vs. the fan of
-possible temperatures), **Rising insights** (`tempSpread`, `rangeGrowth`, `fogMap`, `timeMachine`), **Main
-message** (`roulette`, `freezeTimeline`, `feelsMap`), and **Solution** (`horizonMap`, `routePlanner`), plus an
-Explore section. Edit the copy in `site/index.html`.
+The site is a scrollytelling page that follows the Milestone 7 storyboard in four acts. Each act is a sticky chart
+with step cards; scrolling changes what the chart shows:
 
-Draft designs that are not built yet are generated from the real data by
-`python3 docs/prototype/make_draft_figures.py`. The write-up is `docs/prototype/prototype_v1.html`.
+* **Hook**: `scrollyHook`, one app-style number, then the fan of 64 forecasts it came from.
+* **Rising insights**: `scrollyGrowth`, how the gap grows with lead time, place, the Tue 13 jump, and wind.
+* **Main message**: `scrollyCaveat`, day-by-day spread against the 7 °F trust limit.
+* **Solution**: `scrollyHorizon`, each town's trust horizon.
+
+The shared step logic is in `site/js/scrolly.js`. Edit the copy in `site/index.html`. Classic views sit under Explore.
+
+Draft designs are generated from the real data by `python3 docs/prototype/make_draft_figures.py`. The write-up is
+`docs/prototype/prototype_v1.html`.

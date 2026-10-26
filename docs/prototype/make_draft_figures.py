@@ -26,10 +26,10 @@ man = json.loads((SITE / "manifest.json").read_text())
 leads = man["leads_h"] if isinstance(man["leads_h"], list) else json.loads(man["leads_h"])
 init = dt.datetime(2026, 10, 7, 12)
 LOCAL = dt.timedelta(hours=-4)  # EDT
-THRESH = man.get("horizon_spread_c", 4.0)
+LIMIT_C = 7 * 5 / 9  # the 7 °F trust limit used by the site and the trust-horizon map
 
-COAST = ["Boston", "Cape Cod", "Providence", "Portland ME", "Worcester"]
-INLAND = ["Springfield", "Pittsfield", "Hartford", "Concord NH", "Mt Washington", "Burlington VT", "New York"]
+COAST = ["Boston", "Cape Cod", "Providence", "Portland ME"]
+INLAND = ["Worcester", "Springfield", "Pittsfield", "Hartford", "Concord NH", "Mt Washington", "Burlington VT"]
 
 
 def spread(town, var="t2m"):
@@ -107,7 +107,7 @@ def draft_c_caveats():
             for i, lead in enumerate(leads):
                 if start <= valid(lead) < start + dt.timedelta(days=1):
                     cells.append(s[i])
-        rows.append((start, st.mean(cells), max(cells), sum(c > THRESH for c in cells) / len(cells)))
+        rows.append((start, st.mean(cells), max(cells), sum(c > LIMIT_C for c in cells) / len(cells)))
     fig, ax = plt.subplots(figsize=(7.2, 2.6), dpi=200)
     for k, (start, mean_gap, max_gap, share_over) in enumerate(rows):
         flag = share_over > 0
@@ -120,7 +120,7 @@ def draft_c_caveats():
     ax.set_xlim(-0.05, 7)
     ax.set_ylim(0, 1)
     ax.axis("off")
-    ax.set_title(f"Draft C · Caveat strip: day cells flagged when any hour spreads over {THRESH:.0f}°C",
+    ax.set_title("Draft C · Caveat strip: day cells flagged when any hour spreads over 7 °F (3.9 °C)",
                  loc="left", fontsize=10)
     fig.tight_layout()
     fig.savefig(OUT / "draft_c_caveat_strip.png")

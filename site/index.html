@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>64 Tomorrows</title>
-  <meta name="description" content="Your weather app shows one number. Google's WeatherNext 3 model makes 64 forecasts for New England and lets them disagree. Here is what that spread tells you, and when to trust it.">
+  <meta name="description" content="Your weather app shows one number. Google's WeatherNext 3 model makes 64 forecasts for New England and lets them disagree. Scroll through what that spread tells you, and when to trust it.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Ccircle cx=%228%22 cy=%228%22 r=%226%22 fill=%22%232a78d6%22/%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
@@ -29,57 +29,196 @@
       <p class="kicker">CS1710 final project · Henry Mattoni, Ryan Eto, Luke Tan</p>
       <h1>What if your weather app was wrong?</h1>
       <p class="lede">A weather app shows you one number. Google's WeatherNext 3 AI model makes 64 forecasts for the
-        same hours, and they do not agree. The spread between them is information your app leaves out: how sure the
-        forecast is, and how that changes with the time of day, the weather, how far ahead you look, and where you are.</p>
+        same hours, and they do not agree. Scroll on and the chart changes with the story: what the spread
+        hides, when it matters, and how to tell when to trust a forecast.</p>
       <p class="run-info" id="run-info"></p>
-      <ol class="story-map">
-        <li><a href="#hook">Hook</a><span>One number, many possible tomorrows</span></li>
-        <li><a href="#rising">Rising insights</a><span>Uncertainty grows, unevenly</span></li>
-        <li><a href="#message">Main message</a><span>Your app picks one future</span></li>
-        <li><a href="#solution">Solution</a><span>Learn when to trust it</span></li>
-      </ol>
+      <p class="scroll-cue">Scroll to begin ↓</p>
     </section>
 
     <!-- ACT 1 -->
     <h2 class="part" id="hook"><span>Act 1 · Hook</span> One number, many possible tomorrows</h2>
 
-    <section class="view" data-view="fanHook">
-      <h3>Your app says one number. What else does the model say?</h3>
-      <p>The card is what a typical weather app shows: a single temperature. The shaded fan is the same hour across
-        all 64 forecasts, summarized as percentiles. Tap the card to step through the other answers from the same
-        model run, and move across the chart to pick a different time.</p>
-      <div class="controls"></div>
-      <div class="hook-grid">
-        <div class="app-card" role="button" tabindex="0" aria-label="Tap to see another possible answer">
+    <section class="view scrolly" data-view="scrollyHook">
+      <div class="scrolly-stage">
+        <div class="app-card" aria-label="What a typical weather app shows">
           <p class="app-place"></p>
           <p class="app-num"></p>
           <p class="app-tag"></p>
           <div class="app-chips"></div>
-          <p class="app-hint">Tap for another answer</p>
         </div>
         <div class="chart"></div>
       </div>
-      <p class="note">The statistics give percentiles of the 64 forecasts, not each forecast. The dashed edges
-        (1-in-10 colder and warmer) stand in for the forecasts that disagree the most.</p>
+      <div class="steps">
+        <div class="step"><div>
+          <p class="step-kicker">Step 1</p>
+          <p>A weather app shows one number. For Boston around <span data-val="hook-day"></span>, it is the temperature on
+            the card, and it is the whole forecast you see.</p>
+        </div></div>
+        <div class="step"><div>
+          <p class="step-kicker">Step 2</p>
+          <p>The model makes 64 forecasts for the same hour. The shaded fan is where they land. The darker band holds the
+            middle half of them; the lighter band holds 8 in 10.</p>
+        </div></div>
+        <div class="step"><div>
+          <p class="step-kicker">Step 3</p>
+          <p>The dashed lines are the far ends: 1 in 10 forecasts sits below the lower one, and 1 in 10 above the upper.
+            The app's number is one point in between.</p>
+        </div></div>
+        <div class="step"><div>
+          <p class="step-kicker">Step 4</p>
+          <p>A week out, the fan opens up. At <span data-val="hook-week"></span> the 64 forecasts sit about
+            <span data-val="hook-gap-week"></span>°F apart, and the one number hides all of it.</p>
+        </div></div>
+      </div>
     </section>
 
     <!-- ACT 2 -->
     <h2 class="part" id="rising"><span>Act 2 · Rising insights</span> Uncertainty grows, and not evenly</h2>
 
+    <section class="view scrolly" data-view="scrollyGrowth">
+      <div class="scrolly-stage">
+        <div class="chart"></div>
+        <div class="legend"></div>
+      </div>
+      <div class="steps">
+        <div class="step"><div>
+          <p class="step-kicker">Step 1 · Two days out</p>
+          <p>For Boston, the gap between the 1-in-10 high and the 1-in-10 low is about <span data-val="growth-day"></span>°F
+            at +24 hours. The forecasts mostly agree.</p>
+        </div></div>
+        <div class="step"><div>
+          <p class="step-kicker">Step 2 · A week out</p>
+          <p>The same gap grows to about <span data-val="growth-week"></span>°F by +168 hours. Uncertainty widens with lead time.</p>
+        </div></div>
+        <div class="step"><div>
+          <p class="step-kicker">Step 3 · It depends on where</p>
+          <p>At +144 hours the gap is <span data-val="growth-mt"></span>°F on Mt Washington and
+            <span data-val="growth-cape"></span>°F on Cape Cod. The same week, very different certainty.</p>
+        </div></div>
+        <div class="step"><div>
+          <p class="step-kicker">Step 4 · Then it jumps</p>
+          <p>Between +144 and +150 hours, Boston's gap goes from <span data-val="growth-jump-from"></span>°F to
+            <span data-val="growth-jump-to"></span>°F. It is a step, not a slope, and a single line cannot show it.</p>
+        </div></div>
+        <div class="step"><div>
+          <p class="step-kicker">Step 5 · It depends on what</p>
+          <p>Wind and rain follow their own patterns. Switch to wind and the gaps are different in every place, so there
+            is no single "how sure is the forecast" number.</p>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ACT 3 -->
+    <h2 class="part" id="message"><span>Act 3 · Main message</span> Your weather app is lying to you</h2>
+
+    <section class="view scrolly" data-view="scrollyCaveat">
+      <div class="scrolly-stage">
+        <div class="chart"></div>
+      </div>
+      <div class="steps">
+        <div class="step"><div>
+          <p class="step-kicker">Step 1 · The app's choice</p>
+          <p>Your app picks one future for each day and shows it as the truth. Bars show how far apart the 64 forecasts
+            were on each day, for all 12 towns.</p>
+        </div></div>
+        <div class="step"><div>
+          <p class="step-kicker">Step 2 · Thursday to Saturday</p>
+          <p>The forecasts mostly agree. The widest hour across these three days is <span data-val="cav-agree-max"></span>°F
+            apart, inside the 7°F trust limit. In the short term the one number is a fair summary.</p>
+        </div></div>
+        <div class="step"><div>
+          <p class="step-kicker">Step 3 · Sunday and Monday</p>
+          <p>Some hours spread past 7°F. On Monday, <span data-val="cav-day-over"></span>% of hours are past the limit.
+            This is where the single number starts to be a choice.</p>
+        </div></div>
+        <div class="step"><div>
+          <p class="step-kicker">Step 4 · Tuesday and Wednesday</p>
+          <p>On Wednesday, <span data-val="cav-end-over"></span>% of hours (up to 8 AM) are past the limit, and the typical
+            gap is <span data-val="cav-end-mean"></span>°F. Keyword: usually. Most days are fine. The extreme ones are
+            where the app's number misleads.</p>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- ACT 4 -->
+    <h2 class="part" id="solution"><span>Act 4 · Solution</span> Keep using your app, and learn when to trust it</h2>
+
+    <section class="view scrolly" data-view="scrollyHorizon">
+      <div class="scrolly-stage">
+        <div class="chart"></div>
+      </div>
+      <div class="steps">
+        <div class="step"><div>
+          <p class="step-kicker">Step 1 · Trust horizon</p>
+          <p>A trust horizon is how many days ahead a forecast stays inside the 7°F limit. Each town gets one. In this run
+            most towns hold about four days.</p>
+        </div></div>
+        <div class="step"><div>
+          <p class="step-kicker">Step 2 · Shortest</p>
+          <p><span data-val="hz-short"></span> loses the forecast first, at <span data-val="hz-short-days"></span> days.</p>
+        </div></div>
+        <div class="step"><div>
+          <p class="step-kicker">Step 3 · Longest</p>
+          <p><span data-val="hz-long"></span> keeps it longest, at <span data-val="hz-long-days"></span> days.</p>
+        </div></div>
+        <div class="step"><div>
+          <p class="step-kicker">Step 4 · Coast or inland?</p>
+          <p>Not a clean split. Coastal towns average <span data-val="hz-coast"></span> days and inland towns
+            <span data-val="hz-inland"></span>. Read the horizon for your own town, and treat anything past it as a range.</p>
+        </div></div>
+      </div>
+    </section>
+
+    <p class="cta"><a href="dashboards/uncertainty/">Open the trust-horizon dashboard</a> ·
+      <a href="dashboards/planner/">Open the planning dashboard</a></p>
+
+    <!-- EXPLORE -->
+    <h2 class="part" id="explore"><span>Explore</span> Beyond the story</h2>
+
     <section class="view" data-view="tempSpread">
-      <h3>Two days ahead, how sure is the temperature?</h3>
+      <h3>What will the temperature be over the next two days?</h3>
       <p>The line is the most likely temperature. The shaded band is where 8 in 10 of the forecasts land, and the darker
-        inner band holds the middle half. The band is the part of the forecast that a single line hides.</p>
+        inner band holds the middle half.</p>
       <div class="controls"></div>
       <div class="chart"></div>
     </section>
 
+    <section class="view" data-view="feelsMap">
+      <h3>What will it feel like outside, and what can I do?</h3>
+      <p>Wind chill and humidity combined with temperature. Pick an activity to see where and when conditions are good,
+        and click a town for its hour-by-hour outlook.</p>
+      <div class="controls"></div>
+      <div class="map-wrap"></div>
+      <div class="legend"></div>
+      <div class="detail"></div>
+    </section>
+
+    <section class="view" data-view="freezeTimeline">
+      <h3>Will there be freezing precipitation this week?</h3>
+      <p>Chance of any precipitation, and of precipitation while it is below freezing. Hatched spans show when ice would
+        likely still be on the ground.</p>
+      <div class="controls"></div>
+      <div class="legend legend-swatches static">
+        <span><i style="background:var(--series-1);opacity:.35"></i>Any precipitation</span>
+        <span><i style="background:var(--series-7)"></i>Freezing precipitation</span>
+        <span><i class="hatch"></i>Ice likely on the ground</span>
+      </div>
+      <div class="chart"></div>
+      <p class="note"></p>
+    </section>
+
+    <section class="view" data-view="cloudMap">
+      <h3>What does a day of cloud cover look like?</h3>
+      <p>Press play to watch clouds move across New England. Below the map: the sunshine reaching the ground in Boston.</p>
+      <div class="controls"></div>
+      <div class="map-wrap"></div>
+      <div class="legend"></div>
+      <div class="inset"></div>
+    </section>
+
     <section class="view" data-view="rangeGrowth">
       <h3>How fast does the gap grow, and where?</h3>
-      <p>The gap between the 1-in-10 high and 1-in-10 low forecast, for four places and three variables. It starts
-        narrow and can stay flat for a day, then jump: in Boston the temperature gap goes from about 4 °C to 13 °C
-        between Tue 13 morning and afternoon, as the median moves with it. It depends on the place and the variable,
-        so there is no single "how far can I trust it" number.</p>
+      <p>The gap between the 1-in-10 high and low, for four places and three variables.</p>
       <div class="controls"></div>
       <div class="chart"></div>
       <div class="legend"></div>
@@ -88,31 +227,26 @@
     <section class="view" data-view="fogMap">
       <h3>Where is the forecast foggier?</h3>
       <p>Temperature map with a fog layer: the more the 64 forecasts disagree, the thicker the fog. Press play to look
-        a week ahead and watch the fog move with the weather.</p>
+        a week ahead.</p>
       <div class="controls"></div>
       <div class="map-wrap"></div>
       <div class="legend"></div>
     </section>
 
     <section class="view" data-view="timeMachine">
-      <h3>Do forecasts jump, or drift?</h3>
-      <p>Pick a moment. Each bar is what an earlier forecast run predicted for it, oldest on the left. The forecast for
-        the same moment can jump from one run to the next as weather systems come through, then settle as the moment
-        gets closer. Click a bar to map how that run differed from the newest one.</p>
+      <h3>Forecast time machine: how did the forecast change?</h3>
+      <p>Pick a moment. Each bar is what an earlier forecast run predicted for it, oldest on the left. Click a bar to map
+        how that run differed from the newest one.</p>
       <div class="controls"></div>
       <div class="chart"></div>
       <div class="map-wrap"></div>
       <div class="legend"></div>
     </section>
 
-    <!-- ACT 3 -->
-    <h2 class="part" id="message"><span>Act 3 · Main message</span> Your weather app is lying to you</h2>
-
     <section class="view" data-view="roulette">
-      <h3>Your app picks one future. What does "40% chance" mean?</h3>
-      <p>Each spin picks one possible future out of the forecast's range and maps it. The app only shows you one of
-        them as the truth. Spin many times, and the share of spins with rain (or warmth) settles on the forecast's
-        probability.</p>
+      <h3>Forecast roulette: what does "40% chance" really mean?</h3>
+      <p>Each spin picks one possible future out of the forecast's range and maps it. Spin many times, and the share of
+        spins with rain (or warmth) settles on the forecast's probability.</p>
       <div class="controls"></div>
       <div class="roulette-grid">
         <div class="reel"></div>
@@ -124,49 +258,9 @@
         consistently warm (or wet) future, not a real single forecast run.</p>
     </section>
 
-    <section class="view" data-view="freezeTimeline">
-      <h3>A yes-or-no question: will there be ice this week?</h3>
-      <p>Chance of any precipitation, and of precipitation while it is below freezing (snow, sleet, freezing rain).
-        Hatched spans show when ice would likely still be on the ground. A single "freezing rain" icon hides how
-        unsure that answer is.</p>
-      <div class="controls"></div>
-      <div class="legend legend-swatches static">
-        <span><i style="background:var(--series-1);opacity:.35"></i>Any precipitation</span>
-        <span><i style="background:var(--series-7)"></i>Freezing precipitation</span>
-        <span><i class="hatch"></i>Ice likely on the ground</span>
-      </div>
-      <div class="chart"></div>
-      <p class="note"></p>
-    </section>
-
-    <section class="view" data-view="feelsMap">
-      <h3>Does the spread change what you would do?</h3>
-      <p>Wind chill and humidity combined with temperature. Pick an activity to see where and when conditions are good,
-        and click a town for its hour-by-hour outlook.</p>
-      <div class="controls"></div>
-      <div class="map-wrap"></div>
-      <div class="legend"></div>
-      <div class="detail"></div>
-    </section>
-
-    <p class="caveat story-note">Short-range forecasts are usually reliable, so the spread rarely changes a plan for
-      tomorrow. It matters most for long-range plans and for extreme days, when the 64 forecasts disagree the most.</p>
-
-    <!-- ACT 4 -->
-    <h2 class="part" id="solution"><span>Act 4 · Solution</span> Keep using your app, and learn when to trust it</h2>
-
-    <section class="advice">
-      <ul>
-        <li><b>Days 1 to 2.</b> The forecasts agree closely. Trust the number.</li>
-        <li><b>Days 3 to 5.</b> Check the spread before a plan that depends on a specific hour.</li>
-        <li><b>Beyond that.</b> Read the spread as the forecast. A wide spread means plan for a range.</li>
-      </ul>
-    </section>
-
     <section class="view" data-view="horizonMap">
       <h3>How many days ahead can I trust the forecast here?</h3>
-      <p>Each place gets a "trust horizon": the first time its forecasts spread wider than the limit you choose. Lines
-        mark 1, 2, 3 ... days. In this run, coastal towns have a slightly narrower spread than inland towns through day five.</p>
+      <p>Each place gets a "trust horizon": the first time its forecasts spread wider than the limit you choose.</p>
       <div class="split">
         <div class="stat"></div>
         <div class="controls"></div>
@@ -177,27 +271,12 @@
 
     <section class="view" data-view="routePlanner">
       <h3>When should I leave?</h3>
-      <p>Draw your trip on the map. The chart shows conditions along the route (bottom = start, top = end) for every
-        departure time over the next two days. The outlined column is the best time to go.</p>
+      <p>Draw your trip on the map. The chart shows conditions along the route for every departure time over the next
+        two days. The outlined column is the best time to go.</p>
       <div class="controls"></div>
       <div class="map-wrap"></div>
       <div class="chart"></div>
       <p class="info"></p>
-    </section>
-
-    <p class="cta"><a href="dashboards/uncertainty/">Open the trust-horizon dashboard</a> ·
-      <a href="dashboards/planner/">Open the planning dashboard</a></p>
-
-    <!-- EXPLORE -->
-    <h2 class="part" id="explore"><span>Explore</span> Beyond the story</h2>
-
-    <section class="view" data-view="cloudMap">
-      <h3>What does a day of cloud cover look like?</h3>
-      <p>Press play to watch clouds move across New England. Below the map: the sunshine reaching the ground in Boston.</p>
-      <div class="controls"></div>
-      <div class="map-wrap"></div>
-      <div class="legend"></div>
-      <div class="inset"></div>
     </section>
 
     <section class="view" data-view="windFlow">

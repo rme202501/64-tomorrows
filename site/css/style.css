@@ -353,3 +353,40 @@ footer code { font-size: 12px; }
   .hook-grid { grid-template-columns: 1fr; }
   .app-num { font-size: 72px; }
 }
+
+/* Scrollytelling */
+.scroll-cue { color: var(--muted); font-size: 14px; margin: 28px 0 0; }
+section.scrolly.view { background: none; border: 0; padding: 0; margin: 28px 0 0; min-height: 0; display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+section.scrolly.view.loading::after { display: none; }
+.scrolly-stage { position: sticky; top: 64px; height: calc(100vh - 88px); display: flex; flex-direction: column;
+  justify-content: center; gap: 12px; min-width: 0; }
+.scrolly-stage .chart { min-width: 0; }
+.steps { min-width: 0; }
+.step { min-height: 78vh; display: flex; align-items: center; }
+.step > div { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px;
+  opacity: 0.38; transition: opacity 0.35s ease, transform 0.35s ease; transform: translateY(6px); }
+.step.is-active > div { opacity: 1; transform: none; }
+.step p { color: var(--text-primary); font-size: 17px; line-height: 1.5; margin: 0; }
+.step-kicker { font-size: 12px !important; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--accent) !important; margin-bottom: 8px !important; }
+.step:first-child { min-height: 60vh; }
+.step:last-child { min-height: 60vh; }
+.scrolly-stage .app-card { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; padding: 16px 20px;
+  border-radius: 20px; }
+.scrolly-stage .app-place { flex-basis: 100%; }
+.scrolly-stage .app-num { font-size: 56px; margin: 0; }
+.scrolly-stage .app-tag { flex: 1 1 180px; margin: 0; min-height: 0; font-size: 13px; }
+.scrolly-stage .app-chips { flex: 1 1 220px; }
+.scrolly-stage .app-chips span { font-size: 12px; padding: 4px 8px; }
+@media (prefers-reduced-motion: reduce) { .step > div { transition: none; } }
+
+@media (max-width: 760px) {
+  section.scrolly.view { grid-template-columns: 1fr; gap: 0; }
+  .scrolly-stage { position: sticky; top: 52px; height: auto; background: var(--page); z-index: 2; padding: 8px 0;
+    justify-content: flex-start; }
+  .scrolly-stage .app-num { font-size: 40px; }
+  .step { min-height: 56vh; }
+  .step > div { opacity: 0.45; }
+  .step.is-active > div { opacity: 1; }
+}

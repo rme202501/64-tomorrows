@@ -1,7 +1,10 @@
 import { manifest } from "./data.js";
 
 const VIEWS = {
-  fanHook: () => import("./views/fanHook.js"),
+  scrollyHook: () => import("./views/scrollyHook.js"),
+  scrollyGrowth: () => import("./views/scrollyGrowth.js"),
+  scrollyCaveat: () => import("./views/scrollyCaveat.js"),
+  scrollyHorizon: () => import("./views/scrollyHorizon.js"),
   tempSpread: () => import("./views/tempSpread.js"),
   feelsMap: () => import("./views/feelsMap.js"),
   cloudMap: () => import("./views/cloudMap.js"),
