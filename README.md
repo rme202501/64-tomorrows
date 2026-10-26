@@ -86,3 +86,13 @@ python3 -m http.server --directory site 8731
 ```
 
 Check-prep docs: `docs/walkthrough.md`, `docs/qa_prep.md`, `docs/process_book_m5.md`.
+
+## Prototype V1 (storyline)
+
+The site follows the Milestone 7 storyboard in four acts: **Hook** (`fanHook`, one number vs. the fan of
+possible temperatures), **Rising insights** (`tempSpread`, `rangeGrowth`, `fogMap`, `timeMachine`), **Main
+message** (`roulette`, `freezeTimeline`, `feelsMap`), and **Solution** (`horizonMap`, `routePlanner`), plus an
+Explore section. Edit the copy in `site/index.html`.
+
+Draft designs that are not built yet are generated from the real data by
+`python3 docs/prototype/make_draft_figures.py`. The write-up is `docs/prototype/prototype_v1.html`.

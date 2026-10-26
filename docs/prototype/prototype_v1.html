@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Prototype V1 · 64 Tomorrows</title>
+<style>
+  @page { size: letter; margin: 0.75in; }
+  body { font: 11pt/1.5 "Helvetica Neue", Arial, sans-serif; color: #111; max-width: 7in; margin: 0 auto; }
+  h1 { font-size: 22pt; margin: 0 0 4pt; }
+  h2 { font-size: 15pt; margin: 22pt 0 6pt; border-bottom: 1px solid #ccc; padding-bottom: 3pt; break-after: avoid; }
+  h3 { font-size: 12pt; margin: 14pt 0 4pt; break-after: avoid; }
+  p, li { margin: 4pt 0; }
+  .sub { color: #555; margin-top: 0; }
+  .fig { margin: 10pt 0; break-inside: avoid; }
+  .fig img { width: 100%; border: 1px solid #ddd; }
+  .fig p { font-size: 9.5pt; color: #444; margin: 3pt 0 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 9.5pt; margin: 6pt 0; }
+  th, td { border: 1px solid #ccc; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  th { background: #f2f2f0; }
+  .pb { break-before: page; }
+  code { font-size: 9.5pt; }
+  .note { font-size: 9.5pt; color: #555; }
+</style>
+</head>
+<body>
+
+<h1>Prototype V1</h1>
+<p class="sub">CS1710 · 64 Tomorrows · WeatherNext 3 forecast, New England</p>
+
+<h2>1. Team members</h2>
+<p>Students who worked on this prototype: <b>Henry Mattoni</b>, <b>Ryan Eto</b>, <b>Luke Tan</b>.</p>
+<p class="note">Confirm before submitting that each of the three actively worked on this submission. The
+  contribution split is not recorded in the repository.</p>
+
+<h2>2. What changed since Milestone 7</h2>
+<p>The Milestone 7 storyboard set the story: a hook (the single number a weather app shows), rising insights (how
+  uncertainty grows and varies), a main message (the app picks one future and hides how unsure it is), and a
+  solution (learn when to trust a forecast). Prototype V1 rebuilds the website around that arc. The page is now
+  organized into four acts plus an Explore section, and the new hook view is the novel visualization for this
+  milestone.</p>
+<ul>
+  <li><b>Act 1 · Hook.</b> New view: <i>one number, many possible tomorrows</i> (<code>fanHook</code>).</li>
+  <li><b>Act 2 · Rising insights.</b> Two days ahead (temperature band), how fast the gap grows by place and
+    variable (<code>rangeGrowth</code>), where the fog thickens (<code>fogMap</code>), and whether forecasts jump
+    between runs (<code>timeMachine</code>).</li>
+  <li><b>Act 3 · Main message.</b> "Your app picks one future": forecast roulette, the freezing-precipitation
+    yes-or-no question, and the activity map.</li>
+  <li><b>Act 4 · Solution.</b> A short rule of thumb by lead time, then the trust-horizon map and the route planner,
+    with links to the two dashboards.</li>
+  <li><b>Explore.</b> Cloud cover, wind, and the storm cone, kept as optional depth.</li>
+</ul>
+
+<h2>3. Complete data pipeline</h2>
+<p>The pipeline is finished and produces the data the site uses. Source: Google WeatherNext 3 ensemble statistics
+  (mean and 10th to 90th percentiles of the 64 members) from <code>gs://weathernext3_statistics_spatial</code>.</p>
+<ul>
+  <li><code>pipeline/fetch_wn3_stats.py</code> streams the latest 6-hourly run and crops it to New England.</li>
+  <li><code>pipeline/fetch_time_machine.py</code> pulls the same valid window from 10 earlier runs (for the time machine).</li>
+  <li><code>pipeline/fetch_storm.py</code> pulls wide-domain sea-level pressure (for the storm cone).</li>
+  <li><code>pipeline/build_web_data.py</code> and <code>pipeline/build_extras.py</code> write the compact site data:
+    44 field files stored as int16 binaries, per-town time series for 12 places, and the geography files.</li>
+</ul>
+<p>Current data: run initialized 2026-10-07 12Z, 88 lead times from +1 h to +168 h (hourly to 48 h, then 3-hourly),
+  12 towns. Re-running the fetch streams about 63 GB, so it is documented but not re-run for this submission.</p>
+
+<h2>4. Two functional D3 visualizations</h2>
+<h3>4a. Novel view: one number, many possible tomorrows (new)</h3>
+<p>This is the hook of the story. The left card shows what a weather app shows: one temperature. The right chart is the
+  same hour across all 64 forecasts, drawn as a fan of percentile bands. The card's number is a point on that fan.
+  Its three answers, 1-in-10 colder, most likely, and 1-in-10 warmer, are plotted as dots on the scrub line.</p>
+<ul>
+  <li><b>Data loading:</b> <code>manifest.json</code> for the valid times, and <code>points.json</code> for the selected
+    town's 10th, 25th, 50th, 75th and 90th percentile temperatures.</li>
+  <li><b>Rendering:</b> D3 area bands (10–90 and 25–75), a median line, and dashed 10th and 90th percentile edges. The
+    chart is re-rendered on resize and on theme change.</li>
+  <li><b>Interaction:</b> move the pointer across the chart to pick a time; the card updates. Tap or press Enter on the
+    card to step through the three answers. The active answer is highlighted in the card and on the chart.</li>
+</ul>
+<div class="fig"><img src="fig_fan_hook.png" alt="Fan hook view screenshot">
+  <p>Figure 1. Prototype V1 hook view, Boston, dark theme, desktop width. Captured from the local build.</p></div>
+<p class="note">Known limit: the statistics give percentiles, not each of the 64 forecasts. The dashed edges are the
+  10th and 90th percentiles, so they stand in for the "far-end members" in the storyboard, not for real members.
+  The card is also not a copy of any particular app's design.</p>
+
+<h3>4b. Rising insights: how fast does the gap grow, and where? (reused, reframed)</h3>
+<p>This is the existing growth chart (also the core of the Milestone 6 uncertainty dashboard), now placed in Act 2. It plots the gap between the
+  1-in-10 high and low for four places (Boston, Pittsfield, Cape Cod, Mt Washington) over three variables
+  (temperature, wind, rain rate). Its data loading and rendering are unchanged. The copy now names the jump that
+  shows up in the data (see Section 6).</p>
+
+<h2>5. Website structure</h2>
+<p>The page follows the storyboard's order. A sticky header links to each act. Each section is a card with a title
+  stated as a question or claim, a one-line explanation, the control, and the chart. The views load lazily as they
+  scroll into view. At phone width the hook card stacks above its chart and the story map becomes a two-column
+  grid. Desktop and phone renders were checked in headless Chrome. The phone check was cropped, so it is not yet
+  verified at a true 390 px width.</p>
+
+<h2>6. Insights checked against the data</h2>
+<p>Each storyboard claim was checked against the statistics before it went into the site copy.</p>
+<table>
+  <tr><th>Storyboard claim</th><th>What the data shows (this run)</th><th>Status</th></tr>
+  <tr><td>The first couple of days are very reliable.</td>
+    <td>Boston's 10–90 gap is 1.3 °C at +24 h and 1.4 °C at +48 h, against 3.1 °C at +96 h. The 12-town mean is 1.3 °C
+      at +24 h.</td><td>Supported</td></tr>
+  <tr><td>Uncertainty is largest further away in time.</td>
+    <td>Boston: 1.3 °C (+24 h), 2.1 °C (+72 h), 3.1 °C (+96 h), 11.2 °C (+168 h).</td><td>Supported</td></tr>
+  <tr><td>When uncertainty grows it jumps instead of sloping up.</td>
+    <td>Boston's gap moves from 3.6 °C (+144 h) to 13.0 °C (+150 h), with the median moving from 14.5 °C to 20.5 °C.
+      That is a clear jump. In the first 48 h, however, the top 10% of hourly steps account for only 26% of the total
+      change, so the jumping is concentrated in the late forecast here, not the early one.</td>
+    <td>Partly supported</td></tr>
+  <tr><td>Uncertainty follows a daily pattern.</td>
+    <td>Averaged over the 12 towns for the first 48 h, the gap is lowest at 09:00 local (1.27 °C) and highest at 01:00
+      (1.74 °C). The swing is about half a degree.</td><td>Supported, small</td></tr>
+  <tr><td>Coast is less uncertain than inland.</td>
+    <td>First 48 h: coastal towns 1.45 °C, inland 1.64 °C. +48 to +120 h: 2.69 °C against 2.96 °C. The difference is
+      small and comes from one run.</td><td>Weakly supported; worded as "slightly narrower"</td></tr>
+  <tr><td>Different variables have different patterns.</td>
+    <td>At +24 h the wind gap ranges from 1.2 to 2.3 across towns. The rain-rate gap ranges from 0 to 1.8 mm/h, so
+      rain is much more uncertain in some places.</td><td>Supported</td></tr>
+  <tr><td>Some areas are less certain than others.</td>
+    <td>Mt Washington's gap is 1.6 °C at +24 h and 7.9 °C at +144 h. Cape Cod's is 0.8 °C at +24 h.</td><td>Supported</td></tr>
+</table>
+<p class="note">The earlier "top 10% of steps carry 42–56% of the change" figure was an error. It mixed hourly and
+  3-hourly steps after +48 h. The corrected 26% figure is used here.</p>
+
+<h2>7. Draft designs (not yet implemented)</h2>
+<p>Three visualizations are designed but not in the site. Each draft uses real numbers from this run, drawn with
+  <code>docs/prototype/make_draft_figures.py</code>.</p>
+
+<h3>Draft A · Daily rhythm</h3>
+<div class="fig"><img src="draft_a_daily_rhythm.png" alt="Draft A daily rhythm">
+  <p>Figure 2. Mean gap by local hour, first 48 h, 12 towns. Bars at or above the average are darker.</p></div>
+<p><b>Question:</b> at what time of day is the forecast most or least uncertain? <b>Design:</b> a 24-hour dial (or
+  bar strip) that sits next to the rising-insights chart. Hovering an hour shows the gap at that hour for each
+  day. <b>Why it matters:</b> it answers the storyboard's "daily pattern" claim directly and tells a user when to
+  check a forecast. <b>Open question:</b> the swing is only about half a degree, so the dial might need to stay
+  subtle to avoid overstating it.</p>
+
+<h3>Draft B · Forecast jumps</h3>
+<div class="fig"><img src="draft_b_jumps.png" alt="Draft B forecast jumps">
+  <p>Figure 3. Hourly gap for Boston over the first 48 h. Orange spans are the 10% largest hourly steps.</p></div>
+<p><b>Question:</b> is uncertainty changing smoothly or in jumps? <b>Design:</b> the growth line, with its largest
+  steps shaded and the share of change they account for in the corner. A timeline of run-to-run changes from the time
+  machine would sit below it. <b>Finding that shapes this design:</b> in the early forecast the jumps are small, so
+  the late-week jump (Section 6) is what the design has to show.</p>
+
+<h3>Draft C · Caveat strip for extreme days</h3>
+<div class="fig"><img src="draft_c_caveat_strip.png" alt="Draft C caveat strip">
+  <p>Figure 4. One cell per valid day. A cell is flagged when any hour's 10–90 gap is above 4 °C (the trust limit in
+    the manifest).</p></div>
+<p><b>Question:</b> which days need a caveat? <b>Design:</b> a seven-cell strip above the planner. Flagged days show a
+  "caveat" label and the forecast gap. The storyboard's "keyword usually, show caveats on extreme days" becomes a
+  visible rule instead of a footnote. <b>Finding:</b> in this run, every day from Sun 11 on has at least one hour
+  above 4 °C, and Wed 14 is entirely above it.</p>
+
+<h2>8. Interaction design notes</h2>
+<ul>
+  <li><b>Hook view:</b> pointer scrub for time, tap or Enter to cycle answers. Keyboard users can step through the
+    answers; an arrow-key time scrub is planned for V2.</li>
+  <li><b>Narrative cues:</b> each act's heading states a claim, and each view's title is a question. Act 4 gives
+    a rule of thumb by lead time.</li>
+  <li><b>Shared town selector:</b> the hook and the Act 2 views use the same place names, so a reader's town carries
+    through the story.</li>
+</ul>
+
+<h2>9. Limitations and next steps (V2)</h2>
+<ul>
+  <li>One forecast run only (2026-10-07 12Z). The jumps and daily pattern need several runs before they are
+    claims rather than observations. The time machine view has the other runs.</li>
+  <li>Percentiles, not members. The fan and the caveat strip are built on percentiles, which is correct for the
+    statistics we have, but the storyboard's "two far-end members" would need the member-level data.</li>
+  <li>Confirm the coast-vs-inland result with more towns and runs before it appears as a claim.</li>
+  <li>Add the arrow-key time scrub to the hook, and check the phone layout at a true 390 px width.</li>
+  <li>Build Draft C into the planner page first; it is the smallest change with the clearest story payoff.</li>
+</ul>
+
+</body>
+</html>

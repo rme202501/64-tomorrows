@@ -1,6 +1,7 @@
 import { manifest } from "./data.js";
 
 const VIEWS = {
+  fanHook: () => import("./views/fanHook.js"),
   tempSpread: () => import("./views/tempSpread.js"),
   feelsMap: () => import("./views/feelsMap.js"),
   cloudMap: () => import("./views/cloudMap.js"),

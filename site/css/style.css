@@ -305,3 +305,51 @@ footer code { font-size: 12px; }
   .hour-strip { grid-template-columns: repeat(7, minmax(0, 1fr)); }
   .hour:nth-child(n+8) { display: none; }
 }
+
+/* Storyline (Milestone 8 prototype) */
+.story-map { list-style: none; padding: 0; margin: 28px 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; counter-reset: act; }
+.story-map li { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+.story-map a { display: block; font-weight: 600; color: var(--text-primary); text-decoration: none; }
+.story-map span { color: var(--text-secondary); font-size: 13px; }
+
+.hook-grid { display: grid; grid-template-columns: minmax(220px, 280px) minmax(0, 1fr); gap: 24px; align-items: center; }
+.hook-grid .chart { min-width: 0; }
+
+.app-card {
+  border-radius: 28px;
+  padding: 22px 22px 18px;
+  color: #fff;
+  background: linear-gradient(175deg, #6a9fe0 0%, #2f5fa8 62%, #203f73 100%);
+  box-shadow: 0 10px 30px rgba(13, 54, 107, 0.25);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s ease;
+}
+.app-card:hover { transform: translateY(-2px); }
+.app-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.app-place { margin: 0; font-size: 15px; opacity: 0.9; }
+.app-num { margin: 6px 0 0; font-size: 84px; font-weight: 200; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.app-tag { margin: 8px 0 14px; font-size: 14px; min-height: 2.6em; opacity: 0.95; }
+.app-chips { display: grid; gap: 6px; }
+.app-chips span { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.14); opacity: 0.8; }
+.app-chips span.on { background: rgba(255, 255, 255, 0.32); opacity: 1; font-weight: 600; }
+.app-chips b { font-variant-numeric: tabular-nums; }
+.app-hint { margin: 12px 0 0; font-size: 12px; opacity: 0.75; }
+
+.fan-dot { stroke-width: 2; }
+.fan-dot.active { r: 7; }
+
+.advice { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 18px 24px; margin: 20px 0; }
+.advice ul { margin: 0; padding-left: 18px; color: var(--text-secondary); }
+.advice li { margin: 6px 0; }
+.advice b { color: var(--text-primary); }
+
+.story-note { max-width: 700px; margin: 8px 0 0; font-size: 14px; }
+.cta { font-size: 15px; margin: 8px 0 0; }
+.cta a { color: var(--accent); }
+
+@media (max-width: 720px) {
+  .story-map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hook-grid { grid-template-columns: 1fr; }
+  .app-num { font-size: 72px; }
+}
