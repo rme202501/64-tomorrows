@@ -51,15 +51,17 @@ DEFAULT_VARS = {
 HOURLY_UNTIL_H = 48
 MAX_LEAD_H = 168
 COARSE_STEP_H = 3
+EXTENDED_STEP_H = 6
 
 OUT_DIR = "data/wn3"
 RETRIES = 6
 
 
-def lead_hours():
+def lead_hours(max_lead=MAX_LEAD_H):
     fine = list(range(1, HOURLY_UNTIL_H + 1))
-    coarse = list(range(HOURLY_UNTIL_H + COARSE_STEP_H, MAX_LEAD_H + 1, COARSE_STEP_H))
-    return fine + coarse
+    coarse = list(range(HOURLY_UNTIL_H + COARSE_STEP_H, min(max_lead, MAX_LEAD_H) + 1, COARSE_STEP_H))
+    extended = list(range(MAX_LEAD_H + EXTENDED_STEP_H, max_lead + 1, EXTENDED_STEP_H))
+    return fine + coarse + extended
 
 
 def store_for(run_name):
@@ -171,6 +173,8 @@ def main():
     ap.add_argument("--runs", type=int, default=1, help="number of recent 6-hourly runs")
     ap.add_argument("--vars", help='e.g. "temperature_2m:mean,p10;mean_sea_level_pressure:mean"')
     ap.add_argument("--workers", type=int, default=16)
+    ap.add_argument("--max-lead", type=int, default=MAX_LEAD_H,
+                    help="last lead hour; past 168 h leads are 6-hourly (WN3 goes to 360)")
     args = ap.parse_args()
 
     runs = [args.run] if args.run else recent_6hourly_runs(args.runs)
@@ -179,7 +183,7 @@ def main():
         if os.path.exists(os.path.join(OUT_DIR, f"{run}.nc")):
             print(f"skip {run} (exists)", flush=True)
             continue
-        fetch_run(run, variables, args.workers)
+        fetch_run(run, variables, args.workers, leads=lead_hours(args.max_lead))
 
 
 if __name__ == "__main__":

@@ -21,6 +21,20 @@ Live site: https://rme202501.github.io/64-tomorrows/ · Source: `site/` · Data 
 
 Shared helpers for scroll steps: `site/js/scrolly.js`. Classic views kept under "More views": `site/js/views/`.
 
+## Story page (`site/story/`)
+
+A cinematic scrollytelling rework at https://rme202501.github.io/64-tomorrows/story/ : a procedural 3D Harvard
+(Three.js), a phone weather app that splits into 64 apps, spread and wind views, probability curves, a
+"simulate 100x" ball drop, a Northeast fog map, and two decisions (jacket, outdoor party).
+
+```bash
+python3 pipeline/fetch_wn3_stats.py --run 20261103_12hr_01_preds --max-lead 360   # 15-day run
+python3 pipeline/build_story_data.py data/wn3/20261103_12hr_01_preds.nc          # -> site/story/data/
+```
+
+Each chapter is one module in `site/story/js/chapters/` (contract documented at the top of `site/story/js/main.js`).
+The shared 3D scene is `site/story/js/world/`. The 64 members are reconstructed from the stored quantiles.
+
 ## Run the site
 
 ```bash
