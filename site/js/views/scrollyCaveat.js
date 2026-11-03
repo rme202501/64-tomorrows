@@ -1,6 +1,6 @@
 import { manifest, points } from "../data.js";
-import { frame, responsive } from "../chart.js";
-import { SERIES, onThemeChange } from "../theme.js";
+import { frame, responsive, stepTransition } from "../chart.js";
+import { SERIES, fmtTime, onThemeChange, tooltip } from "../theme.js";
 import { watchSteps, fillValues } from "../scrolly.js";
 
 // Main message: the single number hides a day-by-day caveat.
@@ -14,6 +14,7 @@ export default async function scrollyCaveat(el) {
   const [m, pts] = await Promise.all([manifest(), points()]);
   const chartEl = el.querySelector(".chart");
   const towns = Object.keys(pts);
+  const tip = tooltip();
 
   // Bucket every (town, lead) gap by its local calendar day.
   const dayKey = (t) => d3.utcDay.floor(new Date(t.getTime() + LOCAL_OFFSET_MS));
@@ -23,7 +24,7 @@ export default async function scrollyCaveat(el) {
     if (!buckets.has(key)) buckets.set(key, []);
     towns.forEach((town) => {
       const gap = (pts[town].t2m_p90[k] - pts[town].t2m_p10[k]) * 9 / 5;
-      buckets.get(key).push(gap);
+      buckets.get(key).push({ town, gap, time: t });
     });
   });
   // Thu 8 Oct through Wed 14 Oct (Wed 14 covers the hours up to 8 AM only).
@@ -33,9 +34,10 @@ export default async function scrollyCaveat(el) {
     .sort(([a], [b]) => a - b)
     .map(([key, gaps]) => ({
       day: new Date(key),
-      mean: d3.mean(gaps),
-      max: d3.max(gaps),
-      over: gaps.filter((v) => v > LIMIT_F).length / gaps.length,
+      mean: d3.mean(gaps, (d) => d.gap),
+      max: d3.max(gaps, (d) => d.gap),
+      worst: d3.greatest(gaps, (d) => d.gap),
+      over: gaps.filter((d) => d.gap > LIMIT_F).length / gaps.length,
     }));
 
   // Steps highlight a run of days. -1 means no highlight.
@@ -55,6 +57,10 @@ export default async function scrollyCaveat(el) {
     "cav-end-mean": Math.round(days[6].mean),
   });
 
+  // render() builds the bars for a width; update() dims and labels them for
+  // the current step, animated when the step changed.
+  let marks;
+
   function render(width) {
     const { g, w, h } = frame(chartEl, width, width < 520 ? 260 : 300,
       { top: 26, right: 16, bottom: 30, left: 44 });
@@ -62,6 +68,8 @@ export default async function scrollyCaveat(el) {
     const y = d3.scaleLinear().domain([0, Math.max(LIMIT_F + 2, d3.max(days, (d) => d.max)) * 1.05]).nice().range([h, 0]);
     const color = SERIES()[0];
     const alert = SERIES()[1];
+    const col = (d) => (d.over > 0 ? alert : color);
+    const mid = (d) => x(+d.day) + x.bandwidth() / 2;
 
     g.append("g").attr("class", "grid").selectAll("line").data(y.ticks(5)).join("line")
       .attr("x1", 0).attr("x2", w).attr("y1", y).attr("y2", y);
@@ -69,37 +77,60 @@ export default async function scrollyCaveat(el) {
       .tickFormat((d) => `${d}°`)).call((s) => s.select(".domain").remove());
     g.append("text").attr("class", "axis-label").attr("x", -8).attr("y", -12).text("°F gap");
 
-    const inRun = (i) => i >= state.from && i <= state.to;
-    days.forEach((d, i) => {
-      const bx = x(+d.day);
-      const bw = x.bandwidth();
-      const on = state.from < 0 || inRun(i);
-      const flagged = d.over > 0;
-      const col = flagged ? alert : color;
-      g.append("line").attr("class", "fade-in").attr("x1", bx + bw / 2).attr("x2", bx + bw / 2)
-        .attr("y1", y(d.max)).attr("y2", y(d.mean)).attr("stroke", col).attr("stroke-width", 1.5)
-        .attr("opacity", on ? 1 : 0.25);
-      g.append("rect").attr("class", "fade-in").attr("x", bx).attr("y", y(d.mean)).attr("width", bw)
-        .attr("height", h - y(d.mean)).attr("fill", col).attr("opacity", on ? 0.85 : 0.2);
-      g.append("text").attr("x", bx + bw / 2).attr("y", h + 18).attr("text-anchor", "middle")
-        .attr("font-size", 11).attr("fill", "var(--text-secondary)").text(f(d.day));
-      if (state.from >= 0 && on) {
-        g.append("text").attr("class", "fade-in").attr("x", bx + bw / 2).attr("y", y(d.max) - 6)
-          .attr("text-anchor", "middle").attr("font-size", 11).attr("fill", "var(--text-primary)")
-          .text(d.over > 0 ? `${Math.round(d.over * 100)}%` : "");
-      }
-    });
+    const whiskers = g.append("g").selectAll("line").data(days).join("line")
+      .attr("x1", mid).attr("x2", mid).attr("y1", (d) => y(d.max)).attr("y2", (d) => y(d.mean))
+      .attr("stroke", col).attr("stroke-width", 1.5);
+    const bars = g.append("g").selectAll("rect").data(days).join("rect")
+      .attr("x", (d) => x(+d.day)).attr("y", (d) => y(d.mean)).attr("width", x.bandwidth())
+      .attr("height", (d) => h - y(d.mean)).attr("fill", col);
+    g.append("g").selectAll("text").data(days).join("text")
+      .attr("x", mid).attr("y", h + 18).attr("text-anchor", "middle")
+      .attr("font-size", 11).attr("fill", "var(--text-secondary)").text((d) => f(d.day));
+    const pcts = g.append("g").selectAll("text").data(days).join("text")
+      .attr("x", mid).attr("text-anchor", "middle").attr("font-size", 11).attr("fill", "var(--text-primary)")
+      .text((d) => (d.over > 0 ? `${Math.round(d.over * 100)}%` : ""));
 
     g.append("line").attr("x1", 0).attr("x2", w).attr("y1", y(LIMIT_F)).attr("y2", y(LIMIT_F))
       .attr("stroke", "var(--muted)").attr("stroke-dasharray", "5 4");
     g.append("text").attr("x", 4).attr("y", y(LIMIT_F) - 6).attr("text-anchor", "start")
       .attr("font-size", 11).attr("fill", "var(--muted)").text("7 °F trust limit");
+
+    // Full-height hit area per day, so short bars are as easy to hover as tall ones.
+    g.append("g").selectAll("rect").data(days).join("rect")
+      .attr("x", (d) => x(+d.day) - x.step() * x.paddingInner() / 2).attr("width", x.step())
+      .attr("height", h).attr("fill", "transparent")
+      .on("pointermove", (e, d) => {
+        bars.attr("stroke", (b) => (b === d ? "var(--text-primary)" : null)).attr("stroke-width", 1.5);
+        tip.show(`<b>${d3.utcFormat("%A %b %-d")(d.day)}</b><br>
+          Typical gap: <b>${d.mean.toFixed(1)}°F</b><br>
+          Widest: <b>${Math.round(d.worst.gap)}°F</b>, ${d.worst.town} at ${fmtTime(d.worst.time)}<br>
+          ${Math.round(d.over * 100)}% of town-hours past 7°F`, e.clientX, e.clientY);
+      })
+      .on("pointerleave", () => {
+        bars.attr("stroke", null);
+        tip.hide();
+      });
+
+    marks = { y, whiskers, bars, pcts };
+    update(false);
+  }
+
+  function update(animate) {
+    if (!marks) return;
+    const { y } = marks;
+    const t = stepTransition(animate);
+    const on = (i) => state.from < 0 || (i >= state.from && i <= state.to);
+    const labelled = (i) => state.from >= 0 && on(i);
+    marks.whiskers.transition(t).attr("opacity", (_, i) => (on(i) ? 1 : 0.25));
+    marks.bars.transition(t).attr("opacity", (_, i) => (on(i) ? 0.85 : 0.2));
+    marks.pcts.transition(t).attr("opacity", (_, i) => (labelled(i) ? 1 : 0))
+      .attr("y", (d, i) => y(d.max) - (labelled(i) ? 6 : 0));
   }
 
   const draw = responsive(chartEl, render);
   onThemeChange(draw);
   watchSteps(el, (i) => {
     state = STATES[i];
-    draw();
+    update(true);
   });
 }
