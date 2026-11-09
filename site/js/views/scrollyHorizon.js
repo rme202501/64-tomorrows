@@ -1,6 +1,6 @@
 import { manifest, points } from "../data.js";
-import { frame, responsive } from "../chart.js";
-import { SERIES, onThemeChange } from "../theme.js";
+import { frame, responsive, stepTransition } from "../chart.js";
+import { SERIES, fmtTime, onThemeChange, tooltip } from "../theme.js";
 import { watchSteps, fillValues } from "../scrolly.js";
 
 // Solution: for each town, how many days ahead the forecast stays
@@ -22,6 +22,7 @@ export default async function scrollyHorizon(el) {
   const chartEl = el.querySelector(".chart");
   const towns = Object.keys(pts);
   const maxH = m.leads_h[m.leads_h.length - 1];
+  const tip = tooltip();
 
   // First lead time whose 10-90 gap exceeds the limit. Null = never does.
   const horizon = new Map(towns.map((t) => {
@@ -43,6 +44,10 @@ export default async function scrollyHorizon(el) {
 
   let state = STATES[0];
 
+  // render() builds the bars for a width; update() highlights towns for the
+  // current step, animated when the step changed.
+  let marks;
+
   function render(width) {
     const rowH = width < 520 ? 24 : 28;
     const top = 8;
@@ -52,8 +57,7 @@ export default async function scrollyHorizon(el) {
     const x = d3.scaleLinear().domain([0, maxH / 24]).range([0, w]);
     const y = d3.scaleBand().domain(sorted).range([0, h]).padding(0.28);
     const color = SERIES()[0];
-    const hi = new Set(state.hi);
-    const dim = state.hi.length > 0;
+    const mid = (t) => y(t) + y.bandwidth() / 2 + 4;
 
     g.append("g").attr("class", "grid").selectAll("line").data(d3.range(0, maxH / 24 + 0.01, 1)).join("line")
       .attr("x1", x).attr("x2", x).attr("y1", 0).attr("y2", h);
@@ -61,24 +65,53 @@ export default async function scrollyHorizon(el) {
       .call(d3.axisBottom(x).ticks(7).tickSize(4).tickFormat((d) => `${d} d`))
       .call((s) => s.select(".domain").remove());
 
-    sorted.forEach((t) => {
-      const on = !dim || hi.has(t);
-      const d = days(t);
-      const capped = horizon.get(t) == null;
-      g.append("rect").attr("class", "fade-in").attr("x", 0).attr("y", y(t)).attr("width", x(d))
-        .attr("height", y.bandwidth()).attr("fill", color).attr("opacity", on ? 0.85 : 0.18);
-      g.append("text").attr("x", -8).attr("y", y(t) + y.bandwidth() / 2 + 4).attr("text-anchor", "end")
-        .attr("font-size", 12).attr("fill", on ? "var(--text-primary)" : "var(--muted)").text(t);
-      g.append("text").attr("x", x(d) + 6).attr("y", y(t) + y.bandwidth() / 2 + 4)
-        .attr("font-size", 12).attr("fill", on ? "var(--text-primary)" : "var(--muted)")
-        .text(`${capped ? "> " : ""}${d.toFixed(1)} d`);
-    });
+    const bars = g.append("g").selectAll("rect").data(sorted).join("rect")
+      .attr("x", 0).attr("y", (t) => y(t)).attr("width", (t) => x(days(t)))
+      .attr("height", y.bandwidth()).attr("fill", color);
+    const names = g.append("g").selectAll("text").data(sorted).join("text")
+      .attr("x", -8).attr("y", mid).attr("text-anchor", "end").attr("font-size", 12).text((t) => t);
+    const values = g.append("g").selectAll("text").data(sorted).join("text")
+      .attr("x", (t) => x(days(t)) + 6).attr("y", mid).attr("font-size", 12)
+      .text((t) => `${horizon.get(t) == null ? "> " : ""}${days(t).toFixed(1)} d`);
+
+    // Full-width hit area per row, so the label and the empty track are hoverable too.
+    g.append("g").selectAll("rect").data(sorted).join("rect")
+      .attr("x", -left).attr("y", (t) => y(t) - y.step() * y.paddingInner() / 2)
+      .attr("width", w + left).attr("height", y.step()).attr("fill", "transparent")
+      .on("pointermove", (e, t) => {
+        bars.attr("stroke", (b) => (b === t ? "var(--text-primary)" : null)).attr("stroke-width", 1.5);
+        const hz = horizon.get(t);
+        const last = pts[t].t2m_p90.length - 1;
+        const endGap = (pts[t].t2m_p90[last] - pts[t].t2m_p10[last]) * 9 / 5;
+        const until = hz == null
+          ? "Stays inside 7°F for the whole week"
+          : `Stays inside 7°F until <b>${fmtTime(new Date(+m.init + hz * 3600e3))}</b> (${days(t).toFixed(1)} days)`;
+        tip.show(`<b>${t}</b><br>${until}<br>A week out the forecasts are ${Math.round(endGap)}°F apart`,
+          e.clientX, e.clientY);
+      })
+      .on("pointerleave", () => {
+        bars.attr("stroke", null);
+        tip.hide();
+      });
+
+    marks = { bars, names, values };
+    update(false);
+  }
+
+  function update(animate) {
+    if (!marks) return;
+    const t = stepTransition(animate);
+    const hi = new Set(state.hi);
+    const on = (town) => state.hi.length === 0 || hi.has(town);
+    marks.bars.transition(t).attr("opacity", (town) => (on(town) ? 0.85 : 0.18));
+    marks.names.transition(t).attr("fill", (town) => (on(town) ? "var(--text-primary)" : "var(--muted)"));
+    marks.values.transition(t).attr("fill", (town) => (on(town) ? "var(--text-primary)" : "var(--muted)"));
   }
 
   const draw = responsive(chartEl, render);
   onThemeChange(draw);
   watchSteps(el, (i) => {
     state = STATES[i];
-    draw();
+    update(true);
   });
 }

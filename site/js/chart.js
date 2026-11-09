@@ -20,36 +20,58 @@ export function frame(container, width, height, margin) {
   return { svg, g, w: width - margin.left - margin.right, h: height - margin.top - margin.bottom };
 }
 
+// Transition for a scroll step. Instant on resize, theme change, or when the
+// reader asks for reduced motion.
+export function stepTransition(animate) {
+  const still = !animate || matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return d3.transition().duration(still ? 0 : 700).ease(d3.easeCubicInOut);
+}
+
+// timeAxis and yAxis return their groups; pass them to updateTimeAxis /
+// updateYAxis with a transition to animate a domain change.
 export function timeAxis(g, x, h, w) {
+  const axes = {
+    grid: g.append("g").attr("class", "grid"),
+    axis: g.append("g").attr("class", "axis").attr("transform", `translate(0,${h})`),
+  };
+  updateTimeAxis(axes, x, h, w);
+  return axes;
+}
+
+export function updateTimeAxis({ grid, axis }, x, h, w, t) {
   const days = d3.timeDay.range(...x.domain());
-  g.append("g").attr("class", "grid")
-    .selectAll("line").data(days).join("line")
-    .attr("x1", x).attr("x2", x).attr("y1", 0).attr("y2", h);
+  const lines = grid.selectAll("line").data(days, (d) => +d)
+    .join((enter) => enter.append("line").attr("x1", x).attr("x2", x).attr("y1", 0).attr("y2", h));
+  (t ? lines.transition(t) : lines).attr("x1", x).attr("x2", x);
   const spanDays = (x.domain()[1] - x.domain()[0]) / 864e5;
-  if (spanDays > 3) {
-    g.append("g").attr("class", "axis").attr("transform", `translate(0,${h})`)
-      .call(d3.axisBottom(x).ticks(d3.timeDay.every(w < 420 ? 2 : 1)).tickSize(4).tickFormat(d3.timeFormat("%a %-d")))
-      .call((s) => s.select(".domain").remove());
-    return;
-  }
-  const ticks = w < 420 ? d3.timeHour.every(12) : d3.timeHour.every(6);
-  g.append("g").attr("class", "axis").attr("transform", `translate(0,${h})`)
-    .call(d3.axisBottom(x).ticks(ticks).tickSize(4).tickFormat((d) => (
-      d.getHours() === 0 ? d3.timeFormat("%a")(d) : d3.timeFormat("%-I%p")(d).toLowerCase())))
-    .call((s) => s.select(".domain").remove())
-    .call((s) => s.selectAll(".tick text").classed("tick-day", (d) => d.getHours() === 0));
+  const ax = spanDays > 3
+    ? d3.axisBottom(x).ticks(d3.timeDay.every(w < 420 ? 2 : 1)).tickSize(4).tickFormat(d3.timeFormat("%a %-d"))
+    : d3.axisBottom(x).ticks(w < 420 ? d3.timeHour.every(12) : d3.timeHour.every(6)).tickSize(4)
+      .tickFormat((d) => (d.getHours() === 0 ? d3.timeFormat("%a")(d) : d3.timeFormat("%-I%p")(d).toLowerCase()));
+  (t ? axis.transition(t) : axis).call(ax);
+  axis.select(".domain").remove();
+  axis.selectAll(".tick text").classed("tick-day", (d) => spanDays <= 3 && d.getHours() === 0);
 }
 
 export function yAxis(g, y, w, { format, ticks = 5, label } = {}) {
-  g.append("g").attr("class", "grid")
-    .selectAll("line").data(y.ticks(ticks)).join("line")
-    .attr("x1", 0).attr("x2", w).attr("y1", y).attr("y2", y);
-  g.append("g").attr("class", "axis")
-    .call(d3.axisLeft(y).ticks(ticks).tickSize(0).tickPadding(8).tickFormat(format))
-    .call((s) => s.select(".domain").remove());
+  const axes = {
+    grid: g.append("g").attr("class", "grid"),
+    axis: g.append("g").attr("class", "axis"),
+  };
+  updateYAxis(axes, y, w, { format, ticks });
   if (label) {
-    g.append("text").attr("class", "axis-label").attr("x", -8).attr("y", -10).text(label);
+    axes.label = g.append("text").attr("class", "axis-label").attr("x", -8).attr("y", -10).text(label);
   }
+  return axes;
+}
+
+export function updateYAxis({ grid, axis }, y, w, { format, ticks = 5 } = {}, t) {
+  const lines = grid.selectAll("line").data(y.ticks(ticks), (d) => d)
+    .join((enter) => enter.append("line").attr("x1", 0).attr("x2", w).attr("y1", y).attr("y2", y));
+  (t ? lines.transition(t) : lines).attr("y1", y).attr("y2", y);
+  (t ? axis.transition(t) : axis)
+    .call(d3.axisLeft(y).ticks(ticks).tickSize(0).tickPadding(8).tickFormat(format));
+  axis.select(".domain").remove();
 }
 
 export function crosshair(g, x, w, h, times, onMove, onLeave) {
