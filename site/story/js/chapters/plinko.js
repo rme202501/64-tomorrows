@@ -35,7 +35,7 @@ export default {
         <div class="pk-head">
           <p class="t-kicker">Daily high, Harvard Yard</p>
           <h2 class="t-title pk-title">Simulate the weather 100x.</h2>
-          <p class="t-caption pk-cap">Each ball is one possible <b class="pk-dayname"></b>, drawn from 64 forecasts.</p>
+          <p class="t-caption pk-cap">Each ball is one possible high temperature for <b class="pk-dayname"></b>, picked at random from the 64 forecasts. The tallest piles are the likeliest temperatures.</p>
         </div>
         <div class="chips pk-chips" role="group" aria-label="Forecast day">
           ${this.choices.map((s, i) => `<button type="button" class="chip" data-i="${i}" aria-pressed="false">${chipLabel(s)}</button>`).join("")}

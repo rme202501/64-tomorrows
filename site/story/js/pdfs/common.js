@@ -6,6 +6,37 @@ export function completeDays(data) {
   return data.daily.filter((d) => d.complete && d.lead_days >= 0 && d.high?.length);
 }
 
+/**
+ * Highest temperature in the 24 hours ending exactly `d` days after the forecast was made, per member.
+ * Shaped like a `daily` entry so dayStats() works on it.
+ */
+export function windowDays(data, days) {
+  const { leads } = data;
+  const fmtMD = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: data.meta.tz });
+  return days.filter((d) => d * 24 <= data.maxLead).map((d) => {
+    const a = (d - 1) * 24;
+    const b = d * 24;
+    const idx = [];
+    leads.forEach((h, i) => { if (h > a && h <= b) idx.push(i); });
+    const high = data.members.t2m.map((m) => Math.max(...idx.map((i) => m[i])));
+    const p50 = Math.max(...idx.map((i) => data.series.t2m.p50[i]));
+    const t0 = data.timeAt(a);
+    const t1 = data.timeAt(b);
+    const r0 = fmtMD.format(t0);
+    const r1 = fmtMD.format(t1);
+    const sameMonth = r0.split(" ")[0] === r1.split(" ")[0];
+    return {
+      lead_days: d,
+      high,
+      high_p50: p50,
+      complete: true,
+      label: d === 1 ? "1 day out" : `${d} days out`,
+      short: `${d}d`,
+      range: `${r0}-${sameMonth ? r1.split(" ")[1] : r1}`,
+    };
+  });
+}
+
 export function quantile(sorted, q) {
   const i = (sorted.length - 1) * q;
   const lo = Math.floor(i);

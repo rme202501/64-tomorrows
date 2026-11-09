@@ -29,6 +29,12 @@ function setO(node, value) {
 
 const HOLD = 0.88;
 
+const CAPS = [
+  { at: [0.04, 0.42], html: "You check your weather app." },
+  { at: [0.5, 0.8], html: "It shows <em>one</em> temperature for now, and one for each hour ahead." },
+  { at: [0.86, 1.01], html: "Tap the 10-day forecast: one high and one low per day. Simple, and confident." },
+];
+
 function render(raw, ctx) {
   const p = raw <= 0.45 ? raw : Math.min(1, 0.45 + ((raw - 0.45) * 0.55) / (HOLD - 0.45));
   if (!geo) measure();
@@ -123,6 +129,13 @@ function render(raw, ctx) {
     setT(row, `translate3d(0, ${((1 - t) * -14).toFixed(1)}px, 0)`);
   });
   setO(app.tenNote, seg(p, 0.95, 1));
+
+  ui.caps.forEach((node, k) => {
+    const [a, b] = CAPS[k].at;
+    const t = Math.min(seg(raw, a, a + 0.05), 1 - seg(raw, b - 0.05, b));
+    setO(node, ease.inOut(t));
+    setT(node, `translate3d(0, ${((1 - t) * 12).toFixed(1)}px, 0)`);
+  });
 }
 
 export default {
@@ -145,10 +158,13 @@ export default {
     glareWrap.append(glare);
     frame.append(screen, island, glareWrap);
     device.append(frame);
+    const capWrap = el("div", { class: "st-caps" });
+    const caps = CAPS.map((c) => el("p", { class: "st-cap" }, c.html));
+    capWrap.append(...caps);
     stage.append(backdrop, device);
-    layer.append(stage);
+    layer.append(stage, capWrap);
     layer.classList.add("ph-layer");
-    ui = { layer, app, device, screen, island, glare, backdrop };
+    ui = { layer, app, device, screen, island, glare, backdrop, caps };
     const remeasure = () => { geo = null; render(lastP, ctx); };
     window.addEventListener("resize", remeasure);
     document.fonts?.ready.then(remeasure);

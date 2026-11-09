@@ -188,6 +188,13 @@
   opacity: 0;
   text-shadow: 0 2px 24px rgba(5, 7, 13, 0.35);
 }
+.hero-caption small {
+  display: block;
+  margin-top: 12px;
+  font: 400 clamp(14px, 1.2vw, 16px)/1.4 var(--sans);
+  letter-spacing: 0;
+  color: var(--ink-2);
+}
 .hero-cuewrap { position: absolute; inset: auto 0 0 0; height: 120px; }
 .hero .scroll-cue { opacity: 0; animation: hero-op 1.2s var(--ease-out) 2s forwards; }
 

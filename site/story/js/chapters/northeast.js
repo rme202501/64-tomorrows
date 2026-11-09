@@ -7,11 +7,11 @@ const T_INTRO = [0.12, 0.3];
 const T_PLAY = [0.3, 0.93];
 
 const MOODS = [
-  [4, "sharp."],
-  [6, "a little soft."],
-  [9, "blurring."],
-  [13, "clouding over."],
-  [Infinity, "mostly fog."],
+  [4, "the 64 forecasts agree. A sharp map."],
+  [6, "small disagreements creep in."],
+  [9, "the forecasts are blurring."],
+  [13, "disagreement spreads across the map."],
+  [Infinity, "mostly fog. The forecasts barely agree."],
 ];
 
 const moodOf = (spread) => MOODS.find(([max]) => spread < max)[1];
@@ -52,7 +52,7 @@ export default {
             <div class="ne-ticks"></div>
             <div class="ne-playhead"></div>
           </div>
-          <p class="ne-key"><span class="ne-key-swatch"></span>color = temperature<span class="ne-key-fog"></span>fog = the 64 forecasts disagree</p>
+          <p class="ne-key"><span class="ne-key-item"><span class="ne-key-swatch"></span>color = temperature</span><span class="ne-key-item"><span class="ne-key-fog"></span>gray haze = forecasts disagree</span></p>
         </div>
       </div>`;
 
@@ -269,9 +269,11 @@ export default {
       dom.when.textContent = when;
     }
 
-    const caption = p < 0.28
-      ? "Harvard is one pin on a big map."
-      : `Day ${day}: ${moodOf(spread)}`;
+    const caption = p < 0.2
+      ? "Zoom out: Harvard is one pin on a big map."
+      : p < 0.4
+        ? "Color is temperature. The gray haze is not real fog: it covers places where the 64 forecasts disagree."
+        : `Day ${day}: ${moodOf(spread)}`;
     this.setCaption(caption);
 
     const x = tl * 100;

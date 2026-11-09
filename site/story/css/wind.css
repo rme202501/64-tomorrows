@@ -25,7 +25,8 @@
 .wd-date { margin: 8px 0 0; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
 
 .wd-meta { display: grid; justify-items: end; gap: 14px; }
-.wd-cap { color: var(--ink-2); text-align: right; max-width: none; }
+.wd-cap { color: var(--ink-2); text-align: right; max-width: 40ch; margin-left: auto; }
+.wd-kicker { margin-bottom: 8px; }
 
 .wd-pips {
   position: relative;
@@ -61,6 +62,17 @@
   transition: background 0.35s var(--ease-out), border-color 0.35s var(--ease-out), transform 0.35s var(--ease-out);
 }
 .wd-pips i.is-on { background: var(--accent); border-color: var(--accent); }
+.wd-pips i span {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font: 500 11px/1 var(--mono);
+  color: var(--ink-3);
+  white-space: nowrap;
+  transition: color 0.35s var(--ease-out);
+}
+.wd-pips i.is-on span { color: var(--ink); }
 
 .wd-panels {
   flex: 1;
@@ -120,7 +132,8 @@
   .wd-day { font-size: 40px; }
   .wd-date { margin-top: 6px; }
   .wd-meta { justify-items: start; gap: 10px; }
-  .wd-cap { text-align: left; font-size: 15px; }
+  .wd-cap { text-align: left; font-size: 15px; margin-left: 0; }
+  .wd-pips { margin-bottom: 14px; }
   .wd-pips { width: 100%; }
   .wd-panels { grid-template-columns: 1fr; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 10px; }
   .wd-panel { border-radius: 16px; }

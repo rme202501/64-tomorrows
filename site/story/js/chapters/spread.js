@@ -19,14 +19,19 @@ function mount(layer, ctx) {
   layer.innerHTML = `
     <div class="sp-scrim"></div>
     <div class="sp-captions">
-      <p class="sp-cap t-caption" data-k="0">Back to Harvard. Now watch the 64 drift apart.</p>
-      <p class="sp-cap t-caption" data-k="1">Every day further out, the forecasts disagree more.</p>
+      <p class="sp-cap t-caption" data-k="0">Now follow all 64 forecasts for Harvard Yard, day by day.</p>
+      <p class="sp-cap t-caption" data-k="1">Further out, the forecasts disagree more, so the bars spread apart.</p>
     </div>
     <div class="sp-readout">
-      <p class="sp-when t-mono"><span class="sp-day"></span><span class="sp-date"></span></p>
-      <div class="sp-num t-num"><span class="sp-val">0</span><span class="sp-deg">°</span></div>
-      <p class="sp-num-label">between the coldest and warmest forecast</p>
-      <svg class="sp-strip" aria-hidden="true"></svg>
+      <div class="sp-readout-num">
+        <p class="sp-when t-mono"><span class="sp-day"></span><span class="sp-date"></span></p>
+        <div class="sp-num t-num"><span class="sp-val">0</span><span class="sp-deg">°</span></div>
+        <p class="sp-num-label">between the coldest and warmest forecast</p>
+      </div>
+      <div class="sp-strip-box">
+        <svg class="sp-strip" aria-hidden="true"></svg>
+        <p class="sp-strip-key">Each bar is one of the 64 forecasts of the temperature at that moment.</p>
+      </div>
     </div>
     <div class="sp-chart glass"><div class="sp-chart-host"></div></div>
   `;
@@ -35,26 +40,19 @@ function mount(layer, ctx) {
   const lo = Math.floor(d3.min(all) - 1);
   const hi = Math.ceil(d3.max(all) + 1);
   const strip = layer.querySelector(".sp-strip");
-  const track = document.createElementNS(NS, "line");
-  track.setAttribute("class", "sp-strip-track");
-  const range = document.createElementNS(NS, "line");
-  range.setAttribute("class", "sp-strip-range");
-  strip.append(track, range);
-  const dots = Array.from({ length: data.nMembers }, () => {
-    const c = document.createElementNS(NS, "rect");
-    c.setAttribute("width", 2);
-    c.setAttribute("height", 16);
-    c.setAttribute("y", 4);
-    c.setAttribute("rx", 1);
-    strip.append(c);
-    return c;
-  });
-  const tLo = document.createElementNS(NS, "text");
-  const tHi = document.createElementNS(NS, "text");
-  tLo.setAttribute("class", "sp-strip-end");
-  tHi.setAttribute("class", "sp-strip-end");
+  const mk = (tag, cls) => {
+    const n = document.createElementNS(NS, tag);
+    if (cls) n.setAttribute("class", cls);
+    strip.append(n);
+    return n;
+  };
+  const axis = mk("g", "sp-strip-axis");
+  const track = mk("line", "sp-strip-track");
+  const range = mk("line", "sp-strip-range");
+  const dots = Array.from({ length: data.nMembers }, () => mk("rect"));
+  const tLo = mk("text", "sp-strip-end");
+  const tHi = mk("text", "sp-strip-end");
   tLo.setAttribute("text-anchor", "end");
-  strip.append(tLo, tHi);
 
   const chart = createSpreadChart(layer.querySelector(".sp-chart-host"), data);
   const maxSpread = d3.max(data.spread.t2m_min_max);
@@ -70,6 +68,7 @@ function mount(layer, ctx) {
     day: layer.querySelector(".sp-day"),
     date: layer.querySelector(".sp-date"),
     strip,
+    axis,
     track,
     range,
     dots,
@@ -90,40 +89,85 @@ function mount(layer, ctx) {
   new ResizeObserver(onResize).observe(layer.querySelector(".sp-chart-host"));
 }
 
+const STRIP_PAD = 34;
+
 function layoutStrip() {
-  const w = st.strip.getBoundingClientRect().width;
-  if (!w) return false;
+  const box = st.strip.getBoundingClientRect();
+  if (!box.width || !box.height) return false;
+  const w = box.width;
+  const h = box.height;
   st.stripW = w;
-  st.strip.setAttribute("viewBox", `0 0 ${w} 34`);
-  st.track.setAttribute("x1", 30);
-  st.track.setAttribute("x2", w - 30);
-  st.track.setAttribute("y1", 12);
-  st.track.setAttribute("y2", 12);
+  st.stripH = h;
+  st.barTop = 26;
+  st.barH = Math.max(24, h - st.barTop - 30);
+  st.strip.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  st.sx = d3.scaleLinear().domain([st.lo, st.hi]).range([STRIP_PAD, w - STRIP_PAD]);
+  const base = st.barTop + st.barH + 6;
+  for (const n of [st.track, st.range]) {
+    n.setAttribute("y1", base);
+    n.setAttribute("y2", base);
+  }
+  st.track.setAttribute("x1", STRIP_PAD);
+  st.track.setAttribute("x2", w - STRIP_PAD);
+  const barW = Math.max(2, Math.min(4, (w - 2 * STRIP_PAD) / 160));
+  st.dots.forEach((c) => {
+    c.setAttribute("width", barW);
+    c.setAttribute("height", st.barH);
+    c.setAttribute("y", st.barTop);
+    c.setAttribute("rx", barW / 2);
+  });
+  st.barW = barW;
+  st.axis.replaceChildren();
+  const step = st.hi - st.lo > 40 ? 10 : 5;
+  for (let F = Math.ceil(st.lo / step) * step; F <= st.hi; F += step) {
+    const t = document.createElementNS(NS, "text");
+    t.setAttribute("x", st.sx(F));
+    t.setAttribute("y", base + 18);
+    t.setAttribute("text-anchor", "middle");
+    t.textContent = `${F}°`;
+    st.axis.append(t);
+  }
   return true;
 }
 
 function drawStrip(members) {
   if (!st.stripW && !layoutStrip()) return;
-  const pad = 30;
-  const sx = d3.scaleLinear().domain([st.lo, st.hi]).range([pad, st.stripW - pad]);
+  const sx = st.sx;
   const sorted = members.slice().sort((a, b) => a - b);
   sorted.forEach((v, k) => {
     const c = st.dots[k];
-    c.setAttribute("x", (sx(v) - 1).toFixed(1));
+    c.setAttribute("x", (sx(v) - st.barW / 2).toFixed(1));
     c.setAttribute("fill", tempColor(v));
   });
   const a = sx(sorted[0]);
   const b = sx(sorted[sorted.length - 1]);
   st.range.setAttribute("x1", a);
   st.range.setAttribute("x2", b);
-  st.range.setAttribute("y1", 12);
-  st.range.setAttribute("y2", 12);
-  st.tLo.setAttribute("x", a - 9);
-  st.tLo.setAttribute("y", 16);
+  const merged = b - a < 70;
+  st.tLo.setAttribute("x", merged ? (a + b) / 2 - 4 : a);
+  st.tLo.setAttribute("y", st.barTop - 9);
+  st.tLo.setAttribute("text-anchor", merged ? "end" : "middle");
   st.tLo.textContent = `${Math.round(sorted[0])}°`;
-  st.tHi.setAttribute("x", b + 9);
-  st.tHi.setAttribute("y", 16);
+  st.tHi.setAttribute("x", merged ? (a + b) / 2 + 4 : b);
+  st.tHi.setAttribute("y", st.barTop - 9);
+  st.tHi.setAttribute("text-anchor", merged ? "start" : "middle");
   st.tHi.textContent = `${Math.round(sorted[sorted.length - 1])}°`;
+}
+
+/** a fixed, calm backdrop: the first afternoon, median weather, so only the bars move */
+function sceneFor(data) {
+  const lead = data.leadForDay(0, 15);
+  const s = data.series;
+  return {
+    date: data.timeAt(lead),
+    wx: {
+      tempF: data.at(s.t2m.p50, lead),
+      cloud: Math.min(45, data.at(s.cloud.p50, lead)),
+      rain: 0,
+      wind: data.at(s.wind.p50, lead),
+      windDir: windDir(data.at(s.u10.mean, lead), data.at(s.v10.mean, lead)),
+    },
+  };
 }
 
 function leadFor(p, data) {
@@ -134,34 +178,23 @@ function update(p, ctx) {
   if (!st) return;
   st.lastP = p;
   const { data, world, hud } = ctx;
+  if (!st.scene) st.scene = sceneFor(data);
   const lead = leadFor(p, data);
   const date = data.timeAt(lead);
 
   const cam = ease.inOut(seg(p, 0, T0));
   world.setVisible(true);
   world.setCameraPath("street", "high", cam);
-  world.setDim(0);
+  world.setDim(0.3 * cam);
+  world.setTime(st.scene.date);
+  world.setWeather(st.scene.wx);
+  world.setUncertainty(0);
   ctx.veil(0);
-
-  const t = data.statsAt("t2m", lead);
-  const cloud = data.at(data.series.cloud.p50, lead);
-  const rain = data.at(data.series.precip.p50, lead);
-  const wind = data.at(data.series.wind.p50, lead);
-  const u10 = data.at(data.series.u10.mean, lead);
-  const v10 = data.at(data.series.v10.mean, lead);
-  world.setTime(date);
-  world.setWeather({ tempF: t.p50, cloud, rain, wind, windDir: windDir(u10, v10) });
+  hud.show(false);
 
   const spread = data.at(data.spread.t2m_min_max, lead);
   const u = clamp(spread / st.maxSpread);
   const members = data.membersAt("t2m", lead);
-  world.setUncertainty(Math.max(0.04, u) * smoothstep(0.02, 0.14, p), { members });
-
-  const precip = data.membersAt("precip", lead);
-  const rainProb = precip.filter((v) => v >= 0.1).length / precip.length;
-  hud.show(true);
-  hud.mode("mini");
-  hud.set({ date, tempF: t.p50, wind, rainProb, rain, cloud });
 
   const capIn = smoothstep(0.0, 0.05, p);
   const cap0 = capIn * (1 - smoothstep(0.17, 0.22, p));
@@ -196,9 +229,11 @@ export default {
   update,
   enter(dir, ctx) {
     ctx.world.setVisible(true);
+    ctx.world.setUncertainty(0);
+    ctx.hud.show(false);
     ctx.veil(0);
   },
   leave(dir, ctx) {
-    if (dir < 0) ctx.world.setUncertainty(0, {});
+    ctx.world.setDim(0);
   },
 };

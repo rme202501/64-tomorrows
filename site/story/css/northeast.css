@@ -178,8 +178,8 @@
   left: var(--gutter);
   top: calc(clamp(64px, 12vh, 120px) + clamp(64px, 8vw, 116px) + 76px);
   margin: 0;
-  width: min(30ch, calc(100% - 2 * var(--gutter)));
-  height: 2.8em;
+  width: min(18em, calc(100% - 2 * var(--gutter)));
+  height: 4em;
   font: 400 clamp(17px, 1.7vw, 22px)/1.3 var(--sans);
   color: var(--ink);
   opacity: 0;
@@ -256,10 +256,11 @@
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px 8px;
+  gap: 6px 20px;
   font: 400 12px/1.3 var(--sans);
   color: var(--ink-3);
 }
+.ne-key-item { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
 .ne-key-swatch, .ne-key-fog {
   display: inline-block;
   width: 26px;
@@ -268,7 +269,6 @@
 }
 .ne-key-swatch { background: linear-gradient(90deg, #4a7fe0, #a8dcf0, #f2e6b8, #ffc15e, #ff8a3d); }
 .ne-key-fog {
-  margin-left: 14px;
   background: linear-gradient(90deg, #8a9099, #c3c8cf, #8a9099);
 }
 
@@ -279,13 +279,15 @@
   .ne-caption {
     top: auto;
     bottom: calc(max(28px, env(safe-area-inset-bottom)) + 92px);
-    font-size: 17px;
+    font-size: 16px;
     height: 1.4em;
+    width: auto;
+    right: var(--gutter);
   }
+  .ne-caption span { inset: auto 0 0 0; }
   .ne-tick-label i { display: none; }
   .ne-tick-label { font-size: 10px; }
   .ne-track { margin-bottom: 34px; }
   .ne-pin-label { font-size: 12px; padding: 4px 8px; }
   .ne-pin:not(.is-home) .ne-pin-range { display: none; }
-  .ne-key-fog { margin-left: 8px; }
 }

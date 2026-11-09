@@ -1,7 +1,7 @@
 import { lerp, seg, ease, smoothstep, fmtLongDow, fmtDate, fmtHour, loop } from "../util.js";
 import { WindScene } from "../spread/windscene.js";
 
-const HOUR = 14;
+const DAYS = [1, 5, 10, 15];
 const KINDS = [
   { key: "p10", name: "Calm end", sub: "1 in 10 forecasts is calmer", cls: "is-calm" },
   { key: "p50", name: "Typical", sub: "the middle forecast", cls: "is-mid" },
@@ -10,21 +10,16 @@ const KINDS = [
 
 let st = null;
 
+/** exact multiples of 24 h after the forecast was made, so every panel shows the same time of day */
 function pickDays(data) {
-  const out = [];
-  let prev = -Infinity;
-  for (let d = 0; d < 40; d++) {
-    const lead = data.leadForDay(d, HOUR);
-    if (lead <= prev + 12) break;
-    prev = lead;
-    if (lead < data.leads[0] + 1) continue;
+  return DAYS.filter((d) => d * 24 <= data.maxLead).map((d) => {
+    const lead = d * 24;
     const s = data.statsAt("wind", lead);
-    out.push({ d, lead, date: data.timeAt(lead), p10: s.p10, p50: s.p50, p90: s.p90 });
-  }
-  return out;
+    return { d, lead, date: data.timeAt(lead), p10: s.p10, p50: s.p50, p90: s.p90 };
+  });
 }
 
-const dayName = (d) => (d === 0 ? "Today" : d === 1 ? "Tomorrow" : `${d} days out`);
+const dayName = (d) => (d === 1 ? "1 day out" : `${d} days out`);
 
 function mount(layer, ctx) {
   const days = pickDays(ctx.data);
@@ -32,12 +27,13 @@ function mount(layer, ctx) {
   layer.innerHTML = `
     <header class="wd-head">
       <div class="wd-when">
+        <p class="t-kicker wd-kicker">Wind in Harvard Yard</p>
         <p class="wd-day"></p>
         <p class="wd-date t-mono"></p>
       </div>
       <div class="wd-meta">
-        <p class="wd-cap t-caption">Same afternoon. Three plausible winds.</p>
-        <div class="wd-pips" aria-hidden="true">${days.map(() => "<i></i>").join("")}<b class="wd-pip-fill"></b></div>
+        <p class="wd-cap t-caption">Same hour, same spot. Out of the 64 forecasts: the calm end, the middle, and the windy end.</p>
+        <div class="wd-pips" aria-hidden="true">${days.map((d) => `<i><span>${d.d}d</span></i>`).join("")}<b class="wd-pip-fill"></b></div>
       </div>
     </header>
     <div class="wd-panels">
@@ -81,7 +77,7 @@ function windAt(p) {
   const n = days.length;
   const u = seg(p, 0.12, 0.9) * (n - 1);
   const i = Math.min(n - 2, Math.floor(u));
-  const f = smoothstep(0.3, 0.7, u - i);
+  const f = smoothstep(0.44, 0.56, u - i);
   const a = days[Math.max(0, i)];
   const b = days[Math.min(n - 1, i + 1)];
   return {

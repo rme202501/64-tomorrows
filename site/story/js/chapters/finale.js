@@ -8,7 +8,8 @@ const LINES = [
   { html: "When a plan depends on the weather, look at the spread.", at: 0.42 },
   { html: "Most of the time, you don't <em>really</em> care.", at: 0.54, cls: "is-coda" },
 ];
-const P_CREDITS = 0.68;
+const P_EXPLORE = 0.6;
+const P_CREDITS = 0.7;
 
 const fmtRun = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC", month: "short", day: "numeric", year: "numeric", hour: "2-digit", hourCycle: "h23",
@@ -47,11 +48,23 @@ export default {
         <div class="fn-lines">
           ${LINES.map((l) => `<p class="fn-line ${l.cls ?? ""}">${l.html.split(" ").map((w) => `<span class="fn-w">${w}</span>`).join(" ")}</p>`).join("")}
         </div>
+        <div class="fn-explore glass">
+          <svg class="fn-explore-icon" viewBox="0 0 40 40" aria-hidden="true">
+            <g fill="#ffb547"><ellipse cx="13" cy="15" rx="9" ry="7" transform="rotate(-28 13 15)"/><ellipse cx="14" cy="27" rx="6" ry="4.6" transform="rotate(28 14 27)"/></g>
+            <g fill="#6fb0ff"><ellipse cx="27" cy="15" rx="9" ry="7" transform="rotate(28 27 15)"/><ellipse cx="26" cy="27" rx="6" ry="4.6" transform="rotate(-28 26 27)"/></g>
+            <rect x="19" y="10" width="2" height="22" rx="1" fill="#f4f1ea"/>
+          </svg>
+          <div class="fn-explore-text">
+            <p class="fn-explore-q">Why does the uncertainty grow every day?</p>
+            <p class="fn-explore-a">See how a tiny difference today turns into a completely different day 15.</p>
+          </div>
+          <button type="button" class="btn is-primary fn-explore-go">Explore the butterfly effect</button>
+        </div>
         <footer class="fn-credits">
           <p class="fn-data"><b>Data</b> Google WeatherNext 3 ensemble statistics, run ${data.meta.run} (${run}), Harvard Yard grid point (${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W). Members reconstructed from stored quantiles (p10-p90).</p>
           <p class="fn-team"><b>Team</b> Henry Mattoni, Ryan Eto, Luke Tan. CS1710.</p>
           <nav class="fn-links">
-            <a class="btn is-primary" href="../">Explore the classic site</a>
+            <a class="btn" href="../">Explore the classic site</a>
             <a class="btn" href="../dashboards/uncertainty/">Uncertainty dashboards</a>
             <button type="button" class="btn fn-top">Back to the top</button>
           </nav>
@@ -59,6 +72,14 @@ export default {
       </div>`;
     this.lines = [...layer.querySelectorAll(".fn-line")].map((node, i) => ({ node, words: [...node.querySelectorAll(".fn-w")], at: LINES[i].at }));
     this.credits = layer.querySelector(".fn-credits");
+    this.explore = layer.querySelector(".fn-explore");
+    layer.querySelector(".fn-explore-go").addEventListener("click", async () => {
+      if (!this.chaos) {
+        const { createChaosExplorer } = await import("../chaos/explorer.js");
+        this.chaos = createChaosExplorer(ctx);
+      }
+      this.chaos.open();
+    });
     this.layer = layer;
     const pinEnd = () => {
       const section = document.getElementById("ch-finale");
@@ -116,6 +137,10 @@ export default {
       const dim = li < 2 ? 1 - 0.4 * seg(p, LINES[2].at, LINES[2].at + 0.08) : 1;
       setStyle(line.node, "--dim", dim.toFixed(3));
     });
+    const e = reduced ? (p >= P_EXPLORE ? 1 : 0) : ease.out(seg(p, P_EXPLORE, P_EXPLORE + 0.12));
+    setStyle(this.explore, "opacity", e.toFixed(3));
+    setStyle(this.explore, "transform", `translateY(${((1 - e) * 20).toFixed(1)}px)`);
+    flag(this.explore, "is-live", e > 0.5);
     const c = reduced ? (p >= P_CREDITS ? 1 : 0) : ease.out(seg(p, P_CREDITS, P_CREDITS + 0.14));
     setStyle(this.credits, "opacity", c.toFixed(3));
     setStyle(this.credits, "transform", `translateY(${((1 - c) * 24).toFixed(1)}px)`);

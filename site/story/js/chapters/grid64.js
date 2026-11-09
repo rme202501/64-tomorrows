@@ -17,6 +17,11 @@ const EXTREME = {
   precip: ["wettest", "driest"],
   wind: ["windiest", "calmest"],
 };
+const INTRO_CAPS = [
+  { at: [0, 0.065], html: "Your app boiled the forecast down to this <em>one number</em>." },
+  { at: [0.07, 0.145], html: "But the forecast is really <em>64 forecasts.</em><small>Google's WeatherNext 3 model runs 64 versions of the future, each starting from slightly different guesses about today's weather, since nobody can measure the air perfectly. Your app shows just the middle one.</small>" },
+];
+
 const fmtNum = (v, key) => {
   if (key === "t2m") return `${Math.round(v)}`;
   if (key === "wind") return `${Math.round(Math.max(0, v))}`;
@@ -181,10 +186,20 @@ function frame(dt) {
     }
   }
 
+  renderIntroCaps(p);
   renderCard(intro, hero, tile);
   renderPanel(p, lead, date, hour, tiles[lo].val, tiles[hi].val, key);
   renderCallouts(ex, hi, lo, key, place);
   renderFinale(p, fA, fB, med, medVal, key, lead, hour, place);
+}
+
+function renderIntroCaps(p) {
+  S.introCaps.forEach((node, k) => {
+    const [a, b] = INTRO_CAPS[k].at;
+    const t = Math.min(a === 0 ? 1 : seg(p, a, a + 0.015), 1 - seg(p, b - 0.015, b));
+    setStyle(S.introS[k], "o", "opacity", ease.inOut(t).toFixed(3), node);
+    setStyle(S.introS[k], "t", "transform", `translate3d(0, ${((1 - t) * 12).toFixed(1)}px, 0)`, node);
+  });
 }
 
 function renderCard(intro, hero, tile) {
@@ -241,7 +256,7 @@ function renderPanel(p, lead, date, hour, lo, hi, key) {
   P.range.style.transform = `translate3d(0, ${((1 - ease.out(r)) * 16).toFixed(1)}px, 0)`;
 
   const caps = [
-    seg(p, 0.12, 0.17) * (1 - seg(p, 0.3, 0.34)),
+    seg(p, 0.145, 0.18) * (1 - seg(p, 0.3, 0.34)),
     seg(p, 0.32, 0.36) * (1 - seg(p, 0.5, 0.54)),
     seg(p, 0.52, 0.56) * (1 - seg(p, 0.71, 0.75)),
   ];
@@ -250,7 +265,7 @@ function renderPanel(p, lead, date, hour, lo, hi, key) {
     c.style.transform = `translate3d(0, ${((1 - caps[k]) * 8).toFixed(1)}px, 0)`;
   });
 
-  const headIn = seg(p, 0.1, 0.17);
+  const headIn = seg(p, 0.14, 0.19);
   const out = 1 - seg(p, 0.72, 0.76);
   P.head.style.opacity = (headIn * out).toFixed(3);
   P.scrub.style.opacity = (headIn * out).toFixed(3);
@@ -367,7 +382,7 @@ export default {
     const stats = el("div", { class: "g64-stats passthrough" });
     const range = el("div", { class: "g64-range" }, '<p class="g64-range-k">range</p><p class="g64-range-v t-num"></p>');
     const capWrap = el("div", { class: "g64-caps" });
-    const caps = ["One app became 64. Right now, they agree.", "Fast-forward. Each day out, they drift apart.", "Same place, same hour. Very different days."]
+    const caps = ["Each square is one forecast for Harvard Yard. At first, they all agree.", "Now fast-forward. Each day further out, they drift apart.", "Same place, same hour. Very different days."]
       .map((t) => el("p", { class: "g64-cap" }, t));
     capWrap.append(...caps);
     stats.append(capWrap, range);
@@ -413,11 +428,16 @@ export default {
 
     const foot = el("p", { class: "g64-foot" }, "64 members reconstructed from WeatherNext 3 ensemble quantiles");
 
-    root.append(layout_, tilesWrap, card, dim, liftRoot, titles, foot);
+    const introWrap = el("div", { class: "st-caps g64-intro passthrough" });
+    const introCaps = INTRO_CAPS.map((c) => el("p", { class: "st-cap" }, c.html));
+    introWrap.append(...introCaps);
+
+    root.append(layout_, tilesWrap, card, dim, liftRoot, titles, introWrap, foot);
     layer.append(root);
 
     const ring = sortedSlots();
     S = {
+      introCaps, introS: introCaps.map(() => ({})),
       ctx, data, layer, root, slot, tiles, tilesWrap, callouts, card, cardExtra, cardS: {}, chipBtns, foot, ring,
       lead0: data.leads[0], p: 0, key: "t2m", geo: null, snap: true, stop: null,
       panel: {

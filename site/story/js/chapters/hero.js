@@ -1,7 +1,7 @@
 import { el, seg, ease, localHourOf } from "../util.js";
 
-const START_HOUR = 4.5;
-const SPAN_H = 27;
+const START_HOUR = -4.25;
+const SPAN_H = 12;
 const RAIN_MM = 0.1;
 
 let ui = null;
@@ -43,10 +43,7 @@ export function heroWeather(data, date) {
 }
 
 export default {
-  length: 4,
-
-  /** Date where the hero's day cycle ends (local 7:30 the morning after the first forecast day) */
-  get endTime() { return new Date(t0 + SPAN_H * 3600e3); },
+  length: 2.6,
 
   mount(layer, ctx) {
     const first = ctx.data.valid[0];
@@ -57,7 +54,7 @@ export default {
     head.innerHTML = `
       <h1 class="hero-title" aria-label="64 Tomorrows"><em>${letters("64", 0.15, 0.09)}</em><span class="sp"></span>${letters("Tomorrows", 0.42, 0.07)}</h1>
       <p class="hero-sub">Every forecast is really 64 forecasts.</p>`;
-    const caption = el("p", { class: "hero-caption" }, "The next day in Harvard Yard, as one forecast tells it.");
+    const caption = el("p", { class: "hero-caption" }, "Twelve hours in Harvard Yard, as your weather app tells it.<small>Top left: the single forecast your app shows for each hour.</small>");
     const cueWrap = el("div", { class: "hero-cuewrap" }, '<div class="scroll-cue">Scroll</div>');
     const root = el("div", { class: "hero" });
     root.append(head, caption, cueWrap);
@@ -84,7 +81,7 @@ export default {
     setT(ui.head, `translate3d(0, ${(-ease.in(out) * 90).toFixed(1)}px, 0) scale(${(1 - out * 0.04).toFixed(4)})`);
     setO(ui.cueWrap, 1 - seg(p, 0, 0.05));
 
-    const cap = Math.min(seg(p, 0.3, 0.38), 1 - seg(p, 0.6, 0.68));
+    const cap = Math.min(seg(p, 0.24, 0.32), 1 - seg(p, 0.7, 0.78));
     setO(ui.caption, ease.inOut(cap));
     setT(ui.caption, `translate3d(-50%, ${((1 - cap) * 14).toFixed(1)}px, 0)`);
 

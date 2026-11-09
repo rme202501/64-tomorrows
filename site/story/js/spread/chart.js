@@ -151,7 +151,9 @@ export function createSpreadChart(host, data) {
     let peak = vLine;
     for (let k = 0; k < days.length; k++) if (days[k] >= d0 && days[k] <= Math.min(d1, d)) peak = Math.max(peak, minMax[k]);
     const ly = Math.min(py - 12, y(peak) - 10, byRaw - 20);
-    lineLabel.attr("opacity", 1 - smoothstep(lastDay - 0.35, lastDay - 0.05, d)).attr("x", lx).attr("y", Math.max(-m.t + 12, ly));
+    const annGap = Math.min(...annDays.filter((a) => a < lastDay && a <= d).map((a) => d - a), Infinity);
+    const clearOfAnn = smoothstep(0.35, 0.8, annGap);
+    lineLabel.attr("opacity", clearOfAnn * (1 - smoothstep(lastDay - 0.35, lastDay - 0.05, d))).attr("x", lx).attr("y", Math.max(-m.t + 12, ly));
     bandLabel.attr("x", bx).attr("y", Math.max(byRaw, Math.max(-m.t + 12, ly) + 18));
 
     ann.classed("is-on", (a) => lead >= Math.min(a * 24, data.maxLead) - 0.5);

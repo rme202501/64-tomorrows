@@ -1,15 +1,16 @@
 import { seg, ease, clamp, lerp } from "../util.js";
 import {
-  completeDays, dayStats, tempDomain, kde, tempGradient, fitCanvas, dayName, dateLabel, roundRect, FONT,
+  windowDays, dayStats, tempDomain, kde, tempGradient, fitCanvas, roundRect, FONT,
 } from "../pdfs/common.js";
 
 const START = 0.08;
 const END = 0.78;
 const H0 = 0.025;
+const DAYS = [1, 5, 10, 15];
 const CAPTIONS = [
-  "Your app gives one high per day. A single spike.",
-  "64 forecasts melt that spike into a range.",
-  "Each day out, the curve flattens and widens.",
+  "Your app gives one high temperature per day: a single white spike.",
+  "The 64 forecasts melt that spike into a curve. Where the curve is tall, many forecasts agree.",
+  "Further out, the curve flattens and widens: far more highs are possible.",
   "The app's spike stays sharp. The forecast does not.",
 ];
 
@@ -23,7 +24,7 @@ export default {
     layer.innerHTML = `
       <div class="pd-wrap">
         <header class="pd-head">
-          <p class="t-kicker">Daily high temperature, Harvard Yard</p>
+          <p class="t-kicker">Highest temperature in each 24-hour stretch, Harvard Yard</p>
           <h2 class="t-title pd-title">One number, or a whole curve?</h2>
           <div class="pd-caps">${CAPTIONS.map((c) => `<p class="t-caption pd-cap">${c}</p>`).join("")}</div>
         </header>
@@ -35,10 +36,10 @@ export default {
     this.head = layer.querySelector(".pd-head");
     this.ctx = ctx;
     this.p = 0;
-    this.days = completeDays(ctx.data).map(dayStats);
+    this.days = windowDays(ctx.data, DAYS).map(dayStats);
     this.domain = tempDomain(this.days, 5, 4);
     const n = this.days.length;
-    const weights = this.days.map((_, i) => (i === 0 ? 2.2 : 1));
+    const weights = this.days.map((_, i) => (i === 0 ? 1.6 : 1));
     const total = weights.reduce((a, b) => a + b, 0);
     let acc = START;
     this.slots = weights.map((w) => {
@@ -84,12 +85,12 @@ export default {
     const mobile = this.ctx.mobile;
     const { g, w, h } = fitCanvas(this.canvas, mobile);
     const n = this.n;
-    const L = mobile ? 74 : 132;
-    const R = mobile ? 54 : 104;
+    const L = mobile ? 70 : 150;
+    const R = mobile ? 54 : 110;
     const bottom = mobile ? 36 : 44;
     const pill = mobile ? 30 : 34;
-    const a = 2.3;
-    const gap = Math.min(mobile ? 70 : 92, (h - bottom - pill - 10) / (n - 1 + a));
+    const a = 1.25;
+    const gap = Math.min(mobile ? 120 : 190, (h - bottom - pill - 10) / (n - 1 + a));
     const spike = gap * a;
     const used = (n - 1 + a) * gap;
     const free = Math.max(0, h - bottom - pill - 10 - used);
@@ -303,13 +304,11 @@ export default {
     g.textBaseline = "alphabetic";
     g.textAlign = "left";
     g.fillStyle = "#f4f1ea";
-    g.font = `400 ${mobile ? 18 : 24}px ${FONT.serif}`;
-    const nm = dayName(s.day);
-    const label = mobile && nm === "Tomorrow" ? "Tmrw" : nm;
-    g.fillText(label, 0, y0 - 4);
+    g.font = `400 ${mobile ? 20 : 28}px ${FONT.serif}`;
+    g.fillText(mobile ? s.day.short : s.day.label, 0, y0 - 4);
     g.font = `400 ${mobile ? 9 : 10}px ${FONT.mono}`;
     g.fillStyle = "rgba(244,241,234,0.5)";
-    g.fillText(dateLabel(s.day).toUpperCase(), 0, y0 + (mobile ? 9 : 11));
+    g.fillText(s.day.range.toUpperCase(), 0, y0 + (mobile ? 9 : 11));
     g.restore();
 
     const k = st.morph;
