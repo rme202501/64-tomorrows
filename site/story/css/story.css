@@ -113,6 +113,20 @@ body {
   border-radius: 999px;
   transition: color 0.2s, background 0.2s;
 }
+#archive-tag {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: var(--gutter);
+  z-index: 10;
+  margin: 0;
+  padding: 8px 0;
+  font: 500 12px/1 var(--sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+@media (max-width: 720px) { #archive-tag { display: none; } }
 #old-site:hover { color: var(--ink); background: var(--glass); }
 
 #loader {

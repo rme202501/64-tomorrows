@@ -27,9 +27,6 @@ export function createSpreadChart(host, data) {
   fillGrad.append("stop").attr("offset", "0%").attr("stop-color", "#ffb547").attr("stop-opacity", 0.22);
   fillGrad.append("stop").attr("offset", "100%").attr("stop-color", "#ffb547").attr("stop-opacity", 0);
 
-  const glow = defs.append("filter").attr("id", `${uid}-glow`).attr("x", "-50%").attr("y", "-50%").attr("width", "200%").attr("height", "200%");
-  glow.append("feGaussianBlur").attr("stdDeviation", 4);
-
   const clipRect = defs.append("clipPath").attr("id", `${uid}-clip`).append("rect");
 
   const root = svg.append("g");
@@ -38,7 +35,6 @@ export function createSpreadChart(host, data) {
   const plot = root.append("g").attr("clip-path", `url(#${uid}-clip)`);
   const bandPath = plot.append("path").attr("class", "sp-band");
   const fillPath = plot.append("path").attr("class", "sp-fill").attr("fill", `url(#${uid}-fill)`);
-  const glowPath = plot.append("path").attr("class", "sp-line-glow").attr("stroke", `url(#${uid}-line)`).attr("filter", `url(#${uid}-glow)`);
   const linePath = plot.append("path").attr("class", "sp-line").attr("stroke", `url(#${uid}-line)`);
 
   const ann = root.append("g").attr("class", "sp-anns").selectAll("g").data(annDays).join("g").attr("class", "sp-ann");
@@ -105,7 +101,6 @@ export function createSpreadChart(host, data) {
     const pts = days.map((d, k) => [d, minMax[k], band[k]]);
     const curve = d3.curveMonotoneX;
     linePath.attr("d", d3.line().x((p) => x(p[0])).y((p) => y(p[1])).curve(curve)(pts));
-    glowPath.attr("d", linePath.attr("d"));
     fillPath.attr("d", d3.area().x((p) => x(p[0])).y0(h).y1((p) => y(p[1])).curve(curve)(pts));
     bandPath.attr("d", d3.area().x((p) => x(p[0])).y0(h).y1((p) => y(p[2])).curve(curve)(pts));
 

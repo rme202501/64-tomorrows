@@ -490,6 +490,7 @@ export async function createWorld(canvas, ctx) {
 
   let running = false;
   let visible = true;
+  let occluded = false;
   let raf = 0;
   let last = 0;
   let elapsed = 0;
@@ -573,7 +574,7 @@ export async function createWorld(canvas, ctx) {
   }
 
   function syncRunning() {
-    const want = visible && !document.hidden;
+    const want = visible && !occluded && !document.hidden;
     if (want && !running) {
       running = true;
       last = 0;
@@ -644,6 +645,11 @@ export async function createWorld(canvas, ctx) {
       syncRunning();
     },
     setDim(x) { state.tdim = clamp(+x || 0); },
+    setOccluded(v) {
+      if (occluded === !!v) return;
+      occluded = !!v;
+      syncRunning();
+    },
   };
   return api;
 }

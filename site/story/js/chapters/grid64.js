@@ -1,5 +1,5 @@
 import {
-  el, seg, lerp, ease, clamp, glyph, tempColor, fmtDow, fmtHour, fmtDate, localHourOf, CONDITION_LABEL, loop,
+  el, seg, lerp, ease, clamp, glyph, tempColor, fmtDow, fmtHour, fmtDate, localHourOf, CONDITION_LABEL, loop, autoplay,
 } from "../util.js";
 import { nowState, memberCondition, rainColor, windColor, luminance, smoothTo, skyGradient } from "../phone/kit.js";
 
@@ -19,8 +19,13 @@ const EXTREME = {
 };
 const INTRO_CAPS = [
   { at: [0, 0.065], html: "Your app boiled the forecast down to this <em>one number</em>." },
-  { at: [0.07, 0.145], html: "But the forecast is really <em>64 forecasts.</em><small>Google's WeatherNext 3 model runs 64 versions of the future, each starting from slightly different guesses about today's weather, since nobody can measure the air perfectly. Your app shows just the middle one.</small>" },
+  { at: [0.07, 0.145], html: "But the forecast is really <em>64 forecasts.</em><small>Google's WeatherNext 3 runs 64 versions of the same forecast. Each square is one of them. Your app shows just the middle one.</small>" },
 ];
+
+const SCRUB = [0.05, 0.78];
+const FINALE_AT = 0.83;
+const V_SCRUB_END = 0.68;
+const V_FINALE_END = 0.92;
 
 const fmtNum = (v, key) => {
   if (key === "t2m") return `${Math.round(v)}`;
@@ -99,10 +104,19 @@ function setStyle(obj, key, prop, value, node = obj.node) {
   if (obj[key] !== value) { obj[key] = value; node.style[prop] = value; }
 }
 
+function timelineV() {
+  const iq = S.introAuto.q;
+  if (iq < 0.1499) return iq;
+  const scrub = lerp(0.15, V_SCRUB_END, seg(S.scroll, SCRUB[0], SCRUB[1]));
+  const fq = S.finaleAuto.q;
+  return fq > 0 ? Math.max(scrub, lerp(V_SCRUB_END, V_FINALE_END, fq)) : scrub;
+}
+
 function frame(dt) {
   if (!S.geo) layout();
   const { geo, tiles, ctx, data } = S;
-  const p = S.p;
+  const p = timelineV();
+  S.p = p;
   const key = S.key;
   const snap = S.snap || ctx.reduced;
   S.snap = false;
@@ -165,7 +179,7 @@ function frame(dt) {
     setStyle(t, "t", "transform", `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${sc.toFixed(4)})`);
     let o = k;
     if (i !== hi && i !== lo) o *= 1 - 0.45 * ex;
-    o *= 1 - 0.85 * fA * (1 - fB);
+    o *= 1 - 0.9 * fA * (1 - fB);
     if (i === med && fg > 0) o = 0;
     setStyle(t, "o", "opacity", o.toFixed(3));
 
@@ -270,6 +284,7 @@ function renderPanel(p, lead, date, hour, lo, hi, key) {
   P.head.style.opacity = (headIn * out).toFixed(3);
   P.scrub.style.opacity = (headIn * out).toFixed(3);
   P.chips.style.opacity = headIn.toFixed(3);
+  P.hint.style.opacity = (headIn * (1 - seg(p, 0.72, 0.76))).toFixed(3);
   P.chips.style.pointerEvents = headIn > 0.5 ? "auto" : "none";
   S.foot.style.opacity = (headIn * 0.9).toFixed(3);
 }
@@ -294,8 +309,6 @@ function renderCallouts(ex, hi, lo, key, place) {
 function renderFinale(p, fA, fB, med, medVal, key, lead, hour, place) {
   const { geo, lift, finale } = S;
   finale.dim.style.opacity = (fA * (1 - fB)).toFixed(3);
-  const blur = (4 * fA * (1 - fB)).toFixed(1);
-  if (S.blur !== blur) { S.blur = blur; S.tilesWrap.style.filter = +blur > 0.05 ? `blur(${blur}px)` : ""; }
   const tA = seg(p, 0.76, 0.8) * (1 - seg(p, 0.83, 0.85));
   const tB = seg(p, 0.88, 0.92);
   finale.a.style.opacity = tA.toFixed(3);
@@ -343,7 +356,7 @@ function setVar(key) {
 }
 
 export default {
-  length: 7,
+  length: 5,
   interactive: true,
 
   mount(layer, ctx) {
@@ -382,7 +395,7 @@ export default {
     const stats = el("div", { class: "g64-stats passthrough" });
     const range = el("div", { class: "g64-range" }, '<p class="g64-range-k">range</p><p class="g64-range-v t-num"></p>');
     const capWrap = el("div", { class: "g64-caps" });
-    const caps = ["Each square is one forecast for Harvard Yard. At first, they all agree.", "Now fast-forward. Each day further out, they drift apart.", "Same place, same hour. Very different days."]
+    const caps = ["Each square is one of the 64 forecasts for Harvard Yard at this exact hour. For now, they all agree.", "Scroll to move time forward. The further out we look, the more the squares drift apart.", "The range is the gap between the coldest and warmest forecast. Your app shows only the middle one."]
       .map((t) => el("p", { class: "g64-cap" }, t));
     capWrap.append(...caps);
     stats.append(capWrap, range);
@@ -395,7 +408,8 @@ export default {
       return b;
     });
 
-    panel.append(head, scrub, stats, chips);
+    const hint = el("p", { class: "g64-hint" }, "Tap Temp, Rain or Wind to change what each square shows.");
+    panel.append(head, scrub, stats, chips, hint);
     const slot = el("div", { class: "g64-slot passthrough" });
     layout_.append(panel, slot);
 
@@ -439,9 +453,11 @@ export default {
     S = {
       introCaps, introS: introCaps.map(() => ({})),
       ctx, data, layer, root, slot, tiles, tilesWrap, callouts, card, cardExtra, cardS: {}, chipBtns, foot, ring,
-      lead0: data.leads[0], p: 0, key: "t2m", geo: null, snap: true, stop: null,
+      lead0: data.leads[0], p: 0, scroll: 0,
+      introAuto: autoplay(() => {}, [{ at: 0, to: 0.15, dur: 3.4 }]),
+      finaleAuto: autoplay(() => {}, [{ at: FINALE_AT, to: 1, dur: 6.5 }]), key: "t2m", geo: null, snap: true, stop: null,
       panel: {
-        head, scrub, chips, range,
+        head, scrub, chips, hint, range,
         rangeVal: range.querySelector(".g64-range-v"),
         caps,
         dow: head.querySelector(".g64-dow"),
@@ -473,6 +489,9 @@ export default {
   enter(dir, ctx) {
     S.geo = null;
     S.snap = true;
+    S.scroll = dir < 0 ? 1 : 0;
+    S.introAuto.snap(dir < 0 ? 1 : -1);
+    S.finaleAuto.snap(dir < 0 ? 1 : -1);
     ctx.hud.show(false);
     ctx.world.setDim(0.85);
     S.stop?.();
@@ -483,11 +502,15 @@ export default {
     });
   },
 
-  update(p) {
-    S.p = p;
+  update(p, ctx) {
+    S.scroll = p;
+    S.introAuto.update(p, ctx.reduced);
+    S.finaleAuto.update(p, ctx.reduced);
   },
 
   leave(dir, ctx) {
+    S.introAuto.kill();
+    S.finaleAuto.kill();
     S.stop?.();
     S.stop = null;
     ctx.world.setVisible(true);

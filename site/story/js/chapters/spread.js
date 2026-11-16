@@ -3,7 +3,7 @@ import { createSpreadChart } from "../spread/chart.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const T0 = 0.15;
-const T1 = 0.9;
+const T1 = 0.74;
 
 let st = null;
 
@@ -19,8 +19,10 @@ function mount(layer, ctx) {
   layer.innerHTML = `
     <div class="sp-scrim"></div>
     <div class="sp-captions">
-      <p class="sp-cap t-caption" data-k="0">Now follow all 64 forecasts for Harvard Yard, day by day.</p>
-      <p class="sp-cap t-caption" data-k="1">Further out, the forecasts disagree more, so the bars spread apart.</p>
+      <p class="sp-cap t-caption" data-k="0">Now follow all 64 forecasts for Harvard Yard, hour by hour.</p>
+      <p class="sp-cap t-caption" data-k="1">The line is the gap between the coldest and warmest forecast. The blue band is the middle 80%, without the most extreme tenth at each end.</p>
+      <p class="sp-cap t-caption" data-k="2">The gap grows from about 5 degrees to 25-30 by two weeks. Spikes are moments when forecasts disagree about when a front arrives.</p>
+      <p class="sp-cap t-caption" data-k="3">Why do the forecasts drift apart?</p>
     </div>
     <div class="sp-readout">
       <div class="sp-readout-num">
@@ -88,6 +90,13 @@ function mount(layer, ctx) {
   };
   new ResizeObserver(onResize).observe(layer.querySelector(".sp-chart-host"));
 }
+
+const CAPS = [
+  [0.0, 0.04, 0.12, 0.16],
+  [0.17, 0.22, 0.42, 0.46],
+  [0.48, 0.53, 0.72, 0.75],
+  [0.76, 0.79, 2, 3],
+];
 
 const STRIP_PAD = 34;
 
@@ -185,7 +194,7 @@ function update(p, ctx) {
   const cam = ease.inOut(seg(p, 0, T0));
   world.setVisible(true);
   world.setCameraPath("street", "high", cam);
-  world.setDim(0.3 * cam);
+  world.setDim(lerp(0.3, 0.8, ease.out(seg(p, 0.06, 0.2))) * cam);
   world.setTime(st.scene.date);
   world.setWeather(st.scene.wx);
   world.setUncertainty(0);
@@ -196,18 +205,16 @@ function update(p, ctx) {
   const u = clamp(spread / st.maxSpread);
   const members = data.membersAt("t2m", lead);
 
-  const capIn = smoothstep(0.0, 0.05, p);
-  const cap0 = capIn * (1 - smoothstep(0.17, 0.22, p));
-  const cap1 = smoothstep(0.22, 0.27, p);
-  st.caps[0].style.opacity = cap0;
-  st.caps[0].style.transform = `translate3d(0,${(1 - capIn) * 14 - (1 - cap0) * (p > 0.15 ? 10 : 0)}px,0)`;
-  st.caps[1].style.opacity = cap1;
-  st.caps[1].style.transform = `translate3d(0,${(1 - cap1) * 14}px,0)`;
+  CAPS.forEach(([a0, a1, b0, b1], k) => {
+    const op = smoothstep(a0, a1, p) * (1 - smoothstep(b0, b1, p));
+    const el = st.caps[k];
+    el.style.opacity = op;
+    el.style.transform = `translate3d(0,${(1 - smoothstep(a0, a1, p)) * 12}px,0)`;
+  });
 
   const rIn = ease.out(seg(p, 0.08, 0.18));
   st.readout.style.opacity = rIn;
-  st.readout.style.transform = `translate3d(0,${(1 - rIn) * 24}px,0) scale(${lerp(0.96, 1, rIn)})`;
-  st.readout.style.filter = rIn < 1 ? `blur(${(1 - rIn) * 8}px)` : "none";
+  st.readout.style.transform = `translate3d(0,${(1 - rIn) * 16}px,0)`;
 
   const cIn = ease.out(seg(p, 0.1, 0.2));
   st.chartBox.style.opacity = cIn;
@@ -224,7 +231,7 @@ function update(p, ctx) {
 }
 
 export default {
-  length: 5,
+  length: 4,
   mount,
   update,
   enter(dir, ctx) {

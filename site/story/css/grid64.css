@@ -22,7 +22,7 @@
 
 .g64-panel { display: flex; flex-direction: column; gap: 26px; }
 .g64-panel p { margin: 0; }
-.g64-head, .g64-scrub, .g64-chips { opacity: 0; }
+.g64-head, .g64-scrub, .g64-chips, .g64-hint { opacity: 0; }
 
 .g64-clock { margin-top: 12px; }
 .g64-when {
@@ -78,7 +78,6 @@
   margin: -7px 0 0 -7px;
   border-radius: 50%;
   background: var(--ink);
-  box-shadow: 0 0 0 4px rgba(255, 181, 71, 0.25);
   z-index: 1;
 }
 .g64-scrub-labels {
@@ -92,7 +91,7 @@
 }
 
 .g64-stats { display: flex; flex-direction: column; gap: 22px; }
-.g64-caps { position: relative; height: 52px; }
+.g64-caps { position: relative; height: 76px; }
 .g64-cap {
   position: absolute;
   inset: 0;
@@ -111,6 +110,7 @@
 }
 .g64-range-v small { font-size: 0.32em; letter-spacing: 0; margin-left: 8px; color: var(--ink-2); }
 
+.g64-hint { font: 400 13px/1.4 var(--sans); color: var(--ink-3); margin-top: -12px !important; }
 .g64-chips { gap: 8px; }
 .g64-chips .chip { min-height: 40px; padding: 0 18px; font-size: 14px; }
 .g64-chips .chip:hover { border-color: var(--ink-3); }
@@ -156,12 +156,8 @@
   font: 500 9px/1 var(--mono);
   opacity: 0.7;
 }
-.g64-tile.is-hi { z-index: 2; box-shadow: 0 0 0 2px #fff, 0 0 32px 6px rgba(255, 110, 70, 0.75); }
-.g64-tile.is-lo { z-index: 2; box-shadow: 0 0 0 2px #fff, 0 0 32px 6px rgba(80, 160, 255, 0.75); }
-.g64[data-var="precip"] .g64-tile.is-hi { box-shadow: 0 0 0 2px #fff, 0 0 32px 6px rgba(95, 184, 255, 0.8); }
-.g64[data-var="precip"] .g64-tile.is-lo { box-shadow: 0 0 0 2px #fff, 0 0 32px 6px rgba(255, 255, 255, 0.35); }
-.g64[data-var="wind"] .g64-tile.is-hi { box-shadow: 0 0 0 2px #fff, 0 0 32px 6px rgba(200, 240, 110, 0.75); }
-.g64[data-var="wind"] .g64-tile.is-lo { box-shadow: 0 0 0 2px #fff, 0 0 32px 6px rgba(255, 255, 255, 0.35); }
+.g64-tile.is-hi { z-index: 2; box-shadow: 0 0 0 2px #fff; }
+.g64-tile.is-lo { z-index: 2; box-shadow: 0 0 0 2px #fff; }
 
 .g64-callout {
   position: absolute;
@@ -288,8 +284,9 @@
   .g64-scrub { order: 3; }
   .g64-scrub-labels { margin-top: 10px; }
   .g64-stats { order: 4; flex-direction: row; align-items: flex-start; justify-content: space-between; gap: 12px; }
-  .g64-caps { flex: 1; height: 44px; }
-  .g64-cap { font-size: 15px; }
+  .g64-caps { flex: 1; height: 80px; }
+  .g64-cap { font-size: 14px; line-height: 1.35; }
+  .g64-hint { order: 6; text-align: center; font-size: 12px; margin-top: -6px !important; }
   .g64-range { text-align: right; }
   .g64-range-k { font-size: 10px; }
   .g64-range-v { font-size: 34px; margin-top: 4px !important; }

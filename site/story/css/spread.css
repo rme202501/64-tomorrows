@@ -7,7 +7,8 @@
   inset: 0;
   background:
     radial-gradient(70% 62% at 0% 26%, rgba(5, 7, 13, 0.78), rgba(5, 7, 13, 0.35) 55%, rgba(5, 7, 13, 0) 100%),
-    linear-gradient(to top, rgba(5, 7, 13, 0.78) 0%, rgba(5, 7, 13, 0.25) 42%, rgba(5, 7, 13, 0) 60%);
+    linear-gradient(to top, rgba(5, 7, 13, 0.78) 0%, rgba(5, 7, 13, 0.25) 42%, rgba(5, 7, 13, 0) 60%),
+    rgba(5, 7, 13, 0.5);
   pointer-events: none;
 }
 
@@ -15,7 +16,7 @@
   position: absolute;
   left: var(--gutter);
   top: clamp(72px, 11svh, 110px);
-  width: min(64ch, calc(100% - 2 * var(--gutter)));
+  width: min(78ch, calc(100% - 2 * var(--gutter) - 28px));
 }
 .sp-cap {
   position: absolute;
@@ -40,7 +41,7 @@
   gap: clamp(24px, 4vw, 64px);
   opacity: 0;
   transform-origin: 0 50%;
-  will-change: opacity, transform, filter;
+  will-change: opacity, transform;
 }
 .sp-when {
   margin: 0 0 6px;
@@ -58,7 +59,6 @@
   font-size: clamp(84px, 13svh, 150px);
   line-height: 0.86;
   letter-spacing: -0.045em;
-  text-shadow: 0 0 60px currentColor;
   transition: color 0.25s linear;
 }
 .sp-val { min-width: 1.15ch; text-align: left; }
@@ -97,6 +97,7 @@
 
 .sp-chart {
   position: absolute;
+  background: rgba(8, 11, 20, 0.82);
   left: var(--gutter);
   right: calc(var(--gutter) + 28px);
   bottom: max(28px, 4svh);
@@ -115,12 +116,10 @@
 
 .sp-band { fill: rgba(111, 195, 255, 0.2); }
 .sp-line { fill: none; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
-.sp-line-glow { fill: none; stroke-width: 6; opacity: 0.45; }
 
 .sp-head-rule { stroke: rgba(244, 241, 234, 0.28); stroke-dasharray: 2 4; }
 .sp-head-dot { fill: #fff; stroke: var(--accent); stroke-width: 2.5; }
-.sp-head-halo { fill: var(--accent); opacity: 0.22; animation: sp-pulse 1.8s var(--ease-in-out) infinite; transform-box: fill-box; transform-origin: center; }
-@keyframes sp-pulse { 0%, 100% { transform: scale(0.7); opacity: 0.3; } 50% { transform: scale(1.15); opacity: 0.08; } }
+.sp-head-halo { fill: var(--accent); opacity: 0.18; }
 
 .sp-label { font: 600 12px/1 var(--sans); letter-spacing: 0.02em; paint-order: stroke; stroke: rgba(8, 11, 20, 0.85); stroke-width: 4px; stroke-linejoin: round; }
 .sp-label-line { fill: var(--ink); }
@@ -142,19 +141,19 @@
     background:
       linear-gradient(to bottom, rgba(5, 7, 13, 0.7) 0%, rgba(5, 7, 13, 0.1) 52%, rgba(5, 7, 13, 0.82) 100%);
   }
-  .sp-captions { top: 64px; }
-  .sp-cap { font-size: 16px; }
+  .sp-captions { top: 56px; width: calc(100% - 2 * var(--gutter)); }
+  .sp-cap { font-size: 15px; line-height: 1.35; }
   .sp-readout {
-    top: 128px;
+    top: 150px;
     left: 12px;
     right: 12px;
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  .sp-num { font-size: clamp(64px, 10svh, 96px); }
+  .sp-num { font-size: clamp(56px, 9svh, 84px); }
   .sp-num-label { max-width: none; }
   .sp-strip-box { padding: 10px 10px 8px; border-radius: 16px; }
-  .sp-strip { height: clamp(96px, 14svh, 130px); }
+  .sp-strip { height: clamp(84px, 12svh, 110px); }
   .sp-strip-key { font-size: 12px; }
   .sp-chart {
     left: 12px;
@@ -166,6 +165,3 @@
   .sp-ann-val { font-size: 13px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sp-head-halo { animation: none; }
-}

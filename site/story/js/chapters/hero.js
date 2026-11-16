@@ -1,4 +1,4 @@
-import { el, seg, ease, localHourOf } from "../util.js";
+import { el, seg, ease, localHourOf, fmtDate } from "../util.js";
 
 const START_HOUR = -4.25;
 const SPAN_H = 12;
@@ -53,7 +53,8 @@ export default {
     const head = el("div", { class: "hero-head" });
     head.innerHTML = `
       <h1 class="hero-title" aria-label="64 Tomorrows"><em>${letters("64", 0.15, 0.09)}</em><span class="sp"></span>${letters("Tomorrows", 0.42, 0.07)}</h1>
-      <p class="hero-sub">Every forecast is really 64 forecasts.</p>`;
+      <p class="hero-sub">Your weather app shows one number. Behind it are 64 forecasts that often disagree. Here is what that number leaves out, and when it matters.</p>
+      <p class="hero-archive"><span class="hero-archive-dot"></span>A replay of a real forecast made ${fmtDate(ctx.data.init)}, ${ctx.data.init.getUTCFullYear()}. Not today's weather.</p>`;
     const caption = el("p", { class: "hero-caption" }, "Twelve hours in Harvard Yard, as your weather app tells it.<small>Top left: the single forecast your app shows for each hour.</small>");
     const cueWrap = el("div", { class: "hero-cuewrap" }, '<div class="scroll-cue">Scroll</div>');
     const root = el("div", { class: "hero" });

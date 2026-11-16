@@ -1,4 +1,4 @@
-import { seg, ease, rng } from "../util.js";
+import { seg, ease, autoplay } from "../util.js";
 import { targetDay, flag, setStyle } from "../decide/common.js";
 
 const WORDS = [
@@ -27,17 +27,12 @@ const SHRUG = `
 </svg>`;
 
 export default {
-  length: 2.4,
+  length: 2.2,
+  fade: false,
 
   mount(layer, ctx) {
     layer.classList.add("care");
-    const r = rng(17);
-    const words = WORDS.map((w) => ({
-      ...w,
-      dx: -60 - r() * 80,
-      dy: (r() - 0.5) * 50,
-      rot: (r() - 0.5) * 10,
-    }));
+    const words = WORDS;
     const line = (k) => words.filter((w) => w.line === k).map((w) => {
       const i = words.indexOf(w);
       return `<span class="care-word${w.em ? " is-em" : ""}" data-i="${i}">${w.t}</span>`;
@@ -50,20 +45,21 @@ export default {
           <span class="care-line">${line(1)}<span class="care-mark" data-i="5">?</span></span>
         </h2>
         ${SHRUG}
-        <p class="t-caption care-cap">Two plans. Two very different answers.</p>
+        <p class="t-caption care-cap">Next, two everyday plans: a jacket for the walk to class, and a party on the lawn. Whether the spread matters depends on how costly a wrong guess is, and whether you can decide later.</p>
       </div>`;
-    this.words = words;
     this.wordEls = [...layer.querySelectorAll(".care-word")];
     this.mark = layer.querySelector(".care-mark");
     this.shrug = layer.querySelector(".care-shrug");
     this.cap = layer.querySelector(".care-cap");
     this.layer = layer;
+    this.auto = autoplay((q) => this.render(q, ctx), [{ at: 0.04, to: 1, dur: 2.6 }]);
     const n = targetDay(ctx.data);
     this.time = ctx.data.timeAt(ctx.data.leadForDay(Math.min(1, n), 10.5));
   },
 
   enter(dir, ctx) {
     const { world, data } = ctx;
+    if (dir < 0) this.auto.snap(1);
     world.setVisible(true);
     world.setCamera("street");
     world.setTime(this.time);
@@ -80,26 +76,29 @@ export default {
     ctx.hud.show(false);
   },
 
+  leave(dir) {
+    if (dir < 0) this.auto.snap(0);
+  },
+
   update(p, ctx) {
-    const reduced = ctx.reduced;
+    this.layer.style.opacity = Math.min(1, p / 0.25, (1 - p) / 0.25).toFixed(3);
+    this.auto.update(p, ctx.reduced);
+  },
+
+  render(q) {
     this.wordEls.forEach((node, i) => {
-      const w = this.words[i];
-      const t = reduced ? 1 : ease.out(seg(p, 0.06 + i * 0.07, 0.34 + i * 0.07));
+      const t = ease.out(seg(q, i * 0.08, 0.2 + i * 0.08));
       setStyle(node, "opacity", t.toFixed(3));
-      setStyle(node, "filter", `blur(${((1 - t) * 14).toFixed(1)}px)`);
-      setStyle(node, "transform",
-        `translate3d(${((1 - t) * w.dx).toFixed(1)}px, ${((1 - t) * w.dy).toFixed(1)}px, 0) rotate(${((1 - t) * w.rot).toFixed(2)}deg)`);
+      setStyle(node, "transform", `translate3d(0, ${((1 - t) * 14).toFixed(1)}px, 0)`);
     });
-    const m = reduced ? 1 : ease.out(seg(p, 0.42, 0.6));
+    const m = ease.out(seg(q, 0.46, 0.6));
     setStyle(this.mark, "opacity", m.toFixed(3));
-    setStyle(this.mark, "--drop", `${((1 - m) * -80).toFixed(1)}px`);
-    flag(this.mark, "is-wobbling", m >= 1);
-    const s = ease.out(seg(p, 0.55, 0.72));
+    const s = ease.out(seg(q, 0.55, 0.75));
     setStyle(this.shrug, "opacity", s.toFixed(3));
-    setStyle(this.shrug, "transform", `translateY(${((1 - s) * 24).toFixed(1)}px)`);
+    setStyle(this.shrug, "transform", `translateY(${((1 - s) * 16).toFixed(1)}px)`);
     flag(this.shrug, "is-shrugging", s >= 1);
-    const c = ease.out(seg(p, 0.66, 0.8));
+    const c = ease.out(seg(q, 0.74, 1));
     setStyle(this.cap, "opacity", c.toFixed(3));
-    setStyle(this.cap, "transform", `translateY(${((1 - c) * 14).toFixed(1)}px)`);
+    setStyle(this.cap, "transform", `translateY(${((1 - c) * 10).toFixed(1)}px)`);
   },
 };

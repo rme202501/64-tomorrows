@@ -3,21 +3,21 @@ import {
   windowDays, dayStats, tempDomain, kde, tempGradient, fitCanvas, roundRect, FONT,
 } from "../pdfs/common.js";
 
-const START = 0.08;
-const END = 0.78;
+const START = 0.05;
+const END = 0.72;
 const H0 = 0.025;
 const DAYS = [1, 5, 10, 15];
 const CAPTIONS = [
-  "Your app gives one high temperature per day: a single white spike.",
-  "The 64 forecasts melt that spike into a curve. Where the curve is tall, many forecasts agree.",
-  "Further out, the curve flattens and widens: far more highs are possible.",
-  "The app's spike stays sharp. The forecast does not.",
+  "The white spike is the one number your app shows for tomorrow's high.",
+  "The 64 forecasts spread into a curve. The taller it is, the more of the 64 land on that temperature.",
+  "Further out, the curve gets wider: more highs are possible.",
+  "The app still shows one number. The forecast does not.",
 ];
 
 const capSoft = (v, cap) => v / (1 + (v / cap) ** 10) ** (1 / 10);
 
 export default {
-  length: 5,
+  length: 3.7,
 
   mount(layer, ctx) {
     layer.classList.add("pdfs");
@@ -50,7 +50,7 @@ export default {
     this.n = n;
     const [a0, b0] = this.slots[0];
     const second = this.slots[1]?.[0] ?? END;
-    this.capBreaks = [a0 + (b0 - a0) * 0.3, second + (END - second) * 0.15, END + 0.01];
+    this.capBreaks = [a0 + (b0 - a0) * 0.55, second + (END - second) * 0.15, END + 0.01];
     this.layout = null;
     this.ro = new ResizeObserver(() => { this.layout = null; this.draw(); });
     this.ro.observe(this.canvas);
@@ -87,7 +87,7 @@ export default {
     const n = this.n;
     const L = mobile ? 70 : 150;
     const R = mobile ? 54 : 110;
-    const bottom = mobile ? 36 : 44;
+    const bottom = mobile ? 50 : 58;
     const pill = mobile ? 30 : 34;
     const a = 1.25;
     const gap = Math.min(mobile ? 120 : 190, (h - bottom - pill - 10) / (n - 1 + a));
@@ -188,7 +188,10 @@ export default {
       g.fillRect(Math.round(x), y, 1, 4);
       g.fillText(`${F}°`, x, y + 8);
     }
-    g.textAlign = "right";
+    g.font = `500 ${mobile ? 11 : 12}px ${FONT.sans}`;
+    g.fillStyle = "rgba(244,241,234,0.72)";
+    g.textBaseline = "top";
+    g.fillText("Highest temperature of the day (°F)", (xL + xR) / 2, y + (mobile ? 26 : 30));
     g.restore();
   },
 
@@ -232,10 +235,6 @@ export default {
       if (j === 0) g.moveTo(x, ys[j]); else g.lineTo(x, ys[j]);
     }
     g.save();
-    if (st.current) {
-      g.shadowColor = "rgba(255,220,170,0.7)";
-      g.shadowBlur = 12;
-    }
     g.strokeStyle = Lo.gradLine;
     g.lineWidth = st.current ? 2 : 1.4;
     g.stroke();
@@ -255,10 +254,6 @@ export default {
     const alpha = lerp(0.42, 1, hot);
     g.save();
     g.globalAlpha = alpha;
-    if (hot > 0) {
-      g.shadowColor = "rgba(255,255,255,0.9)";
-      g.shadowBlur = 10 * hot;
-    }
     g.strokeStyle = "#ffffff";
     g.lineWidth = lerp(1.1, 2, hot);
     g.beginPath();

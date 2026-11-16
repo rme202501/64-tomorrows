@@ -27,6 +27,7 @@
 .wd-meta { display: grid; justify-items: end; gap: 14px; }
 .wd-cap { color: var(--ink-2); text-align: right; max-width: 40ch; margin-left: auto; }
 .wd-kicker { margin-bottom: 8px; }
+.wd-take { margin: 0; color: var(--ink); text-align: right; max-width: 40ch; margin-left: auto; font-variant-numeric: tabular-nums; }
 
 .wd-pips {
   position: relative;
@@ -132,7 +133,8 @@
   .wd-day { font-size: 40px; }
   .wd-date { margin-top: 6px; }
   .wd-meta { justify-items: start; gap: 10px; }
-  .wd-cap { text-align: left; font-size: 15px; margin-left: 0; }
+  .wd-cap, .wd-take { text-align: left; font-size: 14px; margin-left: 0; }
+  .wd-meta { gap: 6px; }
   .wd-pips { margin-bottom: 14px; }
   .wd-pips { width: 100%; }
   .wd-panels { grid-template-columns: 1fr; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 10px; }

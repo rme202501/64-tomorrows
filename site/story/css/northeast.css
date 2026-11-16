@@ -43,7 +43,7 @@
   height: 8px;
   border-radius: 50%;
   background: var(--ink);
-  box-shadow: 0 0 0 2px rgba(5, 7, 13, 0.7), 0 0 12px rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(5, 7, 13, 0.7);
 }
 .ne-pin-label {
   position: absolute;
@@ -78,15 +78,7 @@
   width: 12px;
   height: 12px;
   background: var(--accent);
-  box-shadow: 0 0 0 2px rgba(5, 7, 13, 0.75), 0 0 18px rgba(255, 181, 71, 0.75);
-}
-.ne-pin.is-home .ne-pin-dot::after {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  border: 1.5px solid var(--accent);
-  animation: ne-ping 2.4s var(--ease-out) infinite;
+  box-shadow: 0 0 0 2px rgba(5, 7, 13, 0.75);
 }
 .ne-pin.is-home .ne-pin-label {
   border-color: rgba(255, 181, 71, 0.45);
@@ -95,11 +87,6 @@
 }
 .ne-pin.is-home.is-left .ne-pin-label { right: 14px; }
 .ne-pin.is-home .ne-pin-range { color: var(--accent); }
-@keyframes ne-ping {
-  0% { transform: scale(1); opacity: 0.9; }
-  100% { transform: scale(3.2); opacity: 0; }
-}
-
 .ne-cloudpass {
   position: absolute;
   inset: 0;
@@ -130,15 +117,6 @@
     radial-gradient(36% 26% at 50% 50%, rgba(246, 248, 252, 0.9), transparent 72%),
     radial-gradient(24% 18% at 14% 30%, rgba(222, 229, 240, 0.85), transparent 70%),
     radial-gradient(24% 18% at 86% 72%, rgba(222, 229, 240, 0.85), transparent 70%);
-}
-
-.ne-white {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  background: radial-gradient(80% 70% at 50% 50%, #f3f6fa 0%, #dfe6ef 60%, #c9d2de 100%);
-  will-change: opacity;
 }
 
 .ne-ui {
@@ -190,10 +168,9 @@
   inset: 0 auto auto 0;
   opacity: 0;
   transform: translateY(8px);
-  filter: blur(4px);
-  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out), filter 0.5s var(--ease-out);
+  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
 }
-.ne-caption span.is-on { opacity: 1; transform: none; filter: none; }
+.ne-caption span.is-on { opacity: 1; transform: none; }
 
 .ne-timeline {
   position: absolute;
@@ -215,7 +192,6 @@
   border-radius: 999px;
 }
 .ne-track-bg { opacity: 0.22; }
-.ne-track-fill { box-shadow: 0 0 14px rgba(143, 208, 255, 0.25); }
 .ne-ticks { position: absolute; inset: 0; }
 .ne-tick {
   position: absolute;
@@ -248,7 +224,7 @@
   margin: -8px 0 0 -8px;
   border-radius: 50%;
   background: var(--ink);
-  box-shadow: 0 0 0 4px rgba(244, 241, 234, 0.16), 0 0 18px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 0 4px rgba(244, 241, 234, 0.16);
 }
 .ne-key {
   margin: 0;

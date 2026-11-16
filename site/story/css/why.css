@@ -1,0 +1,56 @@
+.wy-stage {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.wy-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-left: 52px;
+  padding-right: 24px;
+}
+.wy-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 500 13px/1.3 var(--sans);
+  color: var(--ink-2);
+}
+.wy-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+}
+.wy-key i {
+  flex: none;
+  display: block;
+  width: 18px;
+}
+.wy-key.is-toy i { height: 1.5px; background: rgba(244, 241, 234, 0.6); }
+.wy-key.is-real i {
+  height: 10px;
+  border-radius: 2px;
+  background: rgba(255, 181, 71, 0.3);
+  border: 1px solid var(--accent);
+}
+.wy-canvas {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: block;
+}
+
+@media (max-width: 720px) {
+  .wy-stage { gap: 10px; }
+  .wy-head { padding-left: 0; padding-right: 0; gap: 8px; }
+  .wy-legend { gap: 4px 14px; font-size: 11.5px; }
+  .wy-key i { width: 14px; }
+}

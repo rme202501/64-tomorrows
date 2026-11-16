@@ -129,19 +129,18 @@ void main() {
   col += vec3(0.25, 0.45, 0.7) * glow * 0.22 * (1.0 - 0.7 * u);
 
   if (u > 0.002) {
-    float drift = uTime * 0.06;
+    float drift = uTime * 0.02;
     float n1 = fbm(vPos.xz * 1.1 + vec2(drift, drift * 0.4));
     float n2 = fbm(vPos.xz * 3.6 - vec2(drift * 1.7, -drift * 0.9) + n1 * 1.5);
-    float shimmer = 0.5 + 0.5 * sin(uTime * 1.3 + n2 * 9.0);
     float lum = dot(col, vec3(0.299, 0.587, 0.114));
     col = mix(col, vec3(lum) * 0.95 + 0.02, u * 0.92);
-    vec3 fogCol = vec3(0.50, 0.53, 0.58) * (0.72 + 0.42 * n2) + 0.05 * shimmer * u;
-    float fogAmt = u * (0.42 + 0.48 * n1 + 0.1 * shimmer);
+    vec3 fogCol = vec3(0.50, 0.53, 0.58) * (0.76 + 0.3 * n2);
+    float fogAmt = u * (0.45 + 0.45 * n1);
     col = mix(col, fogCol, clamp(fogAmt, 0.0, 0.95));
   }
 
   col = mix(uBg, col, edgeFade(vUv));
-  col += (hash(gl_FragCoord.xy + fract(uTime) * 61.0) - 0.5) / 160.0;
+  col += (hash(gl_FragCoord.xy) - 0.5) / 160.0;
   gl_FragColor = vec4(col, 1.0);
 }
 `;
@@ -169,13 +168,13 @@ void main() {
   float rain = smoothstep(0.08, 1.6, f.b);
   float fade = edgeFade(vUv) * uOpacity;
   if (fade < 0.002 || u + rain < 0.02) discard;
-  float drift = uTime * (0.035 + uLayer * 0.02);
+  float drift = uTime * (0.012 + uLayer * 0.008);
   vec2 q = vPos.xz * (0.9 + uLayer * 0.7) + vec2(drift, drift * 0.3) + uLayer * 13.7;
   float n = fbm(q + fbm(q * 0.7 - drift) * 1.4);
   float cover = clamp(u * 1.05 + rain * 0.55, 0.0, 1.0);
   float d = smoothstep(1.0 - cover * 0.95, 1.18 - cover * 0.6, n + cover * 0.35);
   vec3 col = mix(vec3(0.70, 0.73, 0.78), vec3(0.42, 0.45, 0.52), rain * (1.0 - u));
-  float a = d * (0.28 + 0.4 * cover) * fade;
+  float a = d * (0.2 + 0.3 * cover) * fade;
   gl_FragColor = vec4(col, a);
 }
 `;

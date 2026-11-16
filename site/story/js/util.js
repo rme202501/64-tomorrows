@@ -135,3 +135,59 @@ export function el(tag, attrs = {}, html = "") {
   if (html) node.innerHTML = html;
   return node;
 }
+
+/**
+ * Turns a scroll-scrubbed timeline into one that plays on its own.
+ * `stages` is a list of { at, to, dur }: once scroll progress passes `at`, the timeline plays to `to` over `dur` seconds.
+ * Scrolling back above `at` rewinds quickly. render(q) receives the timeline position 0..1.
+ */
+export function autoplay(render, stages, { rewind = 0.45 } = {}) {
+  const state = { q: 0 };
+  let target = 0;
+  let tween = null;
+  const targetFor = (p) => {
+    let t = 0;
+    for (const s of stages) if (p >= s.at) t = Math.max(t, s.to);
+    return t;
+  };
+  const sorted = stages.slice().sort((a, b) => a.to - b.to);
+  /** seconds to play from q0 forward to q1, summing each stage's share of the way */
+  const playTime = (q0, q1) => {
+    let prev = 0;
+    let sec = 0;
+    for (const s of sorted) {
+      const a = Math.max(prev, q0);
+      const b = Math.min(s.to, q1);
+      if (b > a && s.to > prev) sec += (s.dur * (b - a)) / (s.to - prev);
+      prev = s.to;
+    }
+    return sec;
+  };
+  const kill = () => { tween?.kill(); tween = null; };
+  return {
+    get q() { return state.q; },
+    get playing() { return !!tween; },
+    snap(p) {
+      kill();
+      target = targetFor(p);
+      state.q = target;
+      render(state.q);
+    },
+    update(p, reduced = false) {
+      const t = targetFor(p);
+      if (t === target) return;
+      target = t;
+      const forward = t > state.q;
+      kill();
+      if (reduced) { state.q = t; render(t); return; }
+      tween = gsap.to(state, {
+        q: t,
+        duration: forward ? Math.max(0.05, playTime(state.q, t)) : rewind,
+        ease: forward ? "none" : "power2.out",
+        onUpdate: () => render(state.q),
+        onComplete: () => { tween = null; },
+      });
+    },
+    kill,
+  };
+}

@@ -7,13 +7,13 @@ import { buildYard } from "../decide/yard.js";
 const COLD = 55;
 const WARM = 65;
 const HOUR = 9;
-const P_REVEAL = 0.34;
-const P_STEP3 = 0.55;
-const P_A = 0.58;
-const P_B = 0.71;
-const P_C = 0.75;
-const P_D = 0.87;
-const P_PUNCH = 0.88;
+const P_REVEAL = 0.26;
+const P_STEP3 = 0.46;
+const P_A = 0.48;
+const P_B = 0.59;
+const P_C = 0.62;
+const P_D = 0.73;
+const P_PUNCH = 0.75;
 
 const CHOICES = [
   { id: "jacket", label: "Jacket" },
@@ -22,7 +22,7 @@ const CHOICES = [
 ];
 
 export default {
-  length: 5.5,
+  length: 4.5,
   interactive: true,
 
   mount(layer, ctx) {
@@ -70,15 +70,19 @@ export default {
             <div class="jk-days-ends"><span>${N} days out</span><span>That morning</span></div>
           </div>
         </div>
+        <p class="jk-what"></p>
         <div class="jk-chart"><svg class="jk-strip" aria-hidden="true"></svg></div>
+        <p class="jk-how"></p>
         <div class="jk-out">
           <div class="jk-verdict">
             <div class="jk-stat"><b class="jk-count t-num">0</b><span>of 64 mornings<br>colder than ${COLD}°</span></div>
             <p class="jk-line"></p>
           </div>
-          <p class="jk-punch">You can just put on a jacket <em>that morning.</em></p>
+          <div class="jk-punch">
+            <p class="jk-end"></p>
+            <p class="jk-punch-l">You can just put on a jacket <em>that morning.</em></p>
+          </div>
         </div>
-        <p class="jk-note">Narrowing uses this run's spread at shorter leads, centered on the same median.</p>
       </div>`;
 
     this.layer = layer;
@@ -92,6 +96,9 @@ export default {
     this.countEl = this.q(".jk-count");
     this.lineEl = this.q(".jk-line");
     this.daysLabel = this.q(".jk-days-label");
+    this.whatEl = this.q(".jk-what");
+    this.howEl = this.q(".jk-how");
+    this.endEl = this.q(".jk-end");
 
     this.choice = null;
     this.userChose = false;
@@ -258,22 +265,65 @@ export default {
 
   verdictText(cold, warm) {
     const dd = this.dd;
-    const step3 = this.p >= P_STEP3;
-    if (step3) {
+    if (this.p >= P_STEP3) {
+      const choice = this.choice;
       const r = Math.round(dd);
       const when = r === 0 ? "That morning" : r === 1 ? "The day before" : `${r} days out`;
-      return `${when}: cold in ${cold} of 64.`;
+      const lean = cold >= 32 ? cold : 64 - cold;
+      const split = Math.min(cold, 64 - cold) >= 6;
+      switch (choice) {
+        case "laundry":
+          return split
+            ? `${when}: still split, cold in ${cold} of 64. Your jacket is clean either way.`
+            : `${when}: ${lean} of 64 say ${cold >= 32 ? "jacket" : "no jacket"}. It's clean, so you're ready.`;
+        case "jacket":
+          return `${when}: cold in ${cold} of 64. ${cold >= 32 ? "The jacket looks right." : "The jacket looks like too much."}`;
+        case "none":
+          return `${when}: cold in ${cold} of 64. ${cold >= 32 ? "Going without looks risky." : "Going without looks fine."}`;
+        default:
+          return `${when}: cold in ${cold} of 64.`;
+      }
     }
-    const of = (n) => `${n} of 64 tomorrows`;
     switch (this.userChose ? this.choice : "auto") {
       case "none":
-        return cold ? `No jacket. In ${of(cold)}, you shiver.` : "No jacket. Warm enough in all 64 tomorrows.";
+        return cold ? `Decided today: no jacket. You'd shiver in ${cold} of 64.` : "Decided today: no jacket. Warm enough in all 64.";
       case "jacket":
-        return warm ? `Jacket on. Needed in ${cold} of 64, too warm in ${warm}.` : `Jacket on. You needed it in ${of(cold)}.`;
+        return `Decided today: jacket. Needed in ${cold} of 64${warm ? `, too warm in ${warm}` : ""}.`;
       case "laundry":
-        return `Laundry today, just in case. Needed in ${of(cold)}.`;
+        return `Not decided yet. Cold in ${cold} of 64, so the jacket may matter.`;
       default:
-        return `Trusting the app: ${this.choice === "none" ? "no jacket" : "jacket"}. Cold in ${of(cold)}.`;
+        return `Trusting the app: ${this.choice === "none" ? "no jacket" : "jacket"}. Cold in ${cold} of 64.`;
+    }
+  },
+
+  whatText() {
+    if (this.p >= P_STEP3) return "Slide toward that morning to decide closer to the day.";
+    switch (this.userChose ? this.choice : "auto") {
+      case "none": return "You commit to no jacket now, fourteen days early.";
+      case "jacket": return "You commit to a jacket now, fourteen days early.";
+      case "laundry": return "You don't decide about the jacket yet. You just make sure it's clean, so you're ready either way.";
+      default: return this.choice === "none" ? "Trusting the app: no jacket, decided fourteen days early." : "Trusting the app: jacket, decided fourteen days early.";
+    }
+  },
+
+  howText() {
+    return this.p >= P_STEP3
+      ? "The dots bunch together because short-range forecasts agree. Shorter leads use this run's own spread, centered on the same median."
+      : "Each dot is one of the 64 forecasts for 9 AM that day. Left of the dashed line is jacket weather.";
+  },
+
+  endText() {
+    const vals = this.days[0];
+    const cold = vals.filter((v) => v < COLD).length;
+    const warm = 64 - cold;
+    const tail = " Decide that morning, and the long-range spread doesn't matter.";
+    switch (this.choice) {
+      case "laundry":
+        return `Washing it was the smart move. That morning, ${Math.max(cold, warm)} of 64 forecasts agree: ${cold >= 32 ? "wear it" : "leave it"}.${tail}`;
+      case "none":
+        return (cold ? `Going without, you'd have shivered in ${cold} of 64 mornings.` : "Going without, you'd have been fine in all 64 mornings.") + tail;
+      default:
+        return (warm ? `With the jacket, you'd have been too warm in ${warm} of 64 mornings.` : "With the jacket, you'd have been right in all 64 mornings.") + tail;
     }
   },
 
@@ -286,6 +336,9 @@ export default {
       tweenNumber(this.countEl, cold, { duration: 0.6 });
     }
     setText(this.lineEl, this.verdictText(cold, warm));
+    setText(this.whatEl, this.whatText());
+    setText(this.howEl, this.howText());
+    setText(this.endEl, this.endText());
   },
 
   startSampling() {

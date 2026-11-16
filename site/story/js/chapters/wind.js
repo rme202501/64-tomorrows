@@ -32,7 +32,8 @@ function mount(layer, ctx) {
         <p class="wd-date t-mono"></p>
       </div>
       <div class="wd-meta">
-        <p class="wd-cap t-caption">Same hour, same spot. Out of the 64 forecasts: the calm end, the middle, and the windy end.</p>
+        <p class="wd-cap t-caption">Three of the 64 forecasts for the same hour: a calm one (10th percentile), the middle one, and a windy one (90th percentile).</p>
+        <p class="wd-take t-caption"></p>
         <div class="wd-pips" aria-hidden="true">${days.map((d) => `<i><span>${d.d}d</span></i>`).join("")}<b class="wd-pip-fill"></b></div>
       </div>
     </header>
@@ -59,6 +60,7 @@ function mount(layer, ctx) {
     date: layer.querySelector(".wd-date"),
     pips: [...layer.querySelectorAll(".wd-pips i")],
     pipFill: layer.querySelector(".wd-pip-fill"),
+    take: layer.querySelector(".wd-take"),
     vals: panels.map((p) => p.querySelector(".wd-v")),
     scenes: panels.map((p, i) => new WindScene(p.querySelector("canvas"), i + 1, { reduced: ctx.reduced })),
     stop: null,
@@ -75,7 +77,7 @@ function mount(layer, ctx) {
 function windAt(p) {
   const { days } = st;
   const n = days.length;
-  const u = seg(p, 0.12, 0.9) * (n - 1);
+  const u = seg(p, 0.08, 0.68) * (n - 1);
   const i = Math.min(n - 2, Math.floor(u));
   const f = smoothstep(0.44, 0.56, u - i);
   const a = days[Math.max(0, i)];
@@ -104,13 +106,15 @@ function update(p, ctx) {
     st.shownDay = w.day.d;
     st.day.textContent = dayName(w.day.d);
     if (!ctx.reduced) {
-      st.when.animate([{ opacity: 0, transform: "translateY(10px)", filter: "blur(6px)" }, { opacity: 1, transform: "none", filter: "none" }],
-        { duration: 520, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+      st.when.animate([{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }],
+        { duration: 400, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
     }
     st.date.textContent = `${fmtLongDow(w.day.date)}, ${fmtDate(w.day.date)} · ${fmtHour(w.day.date)}`;
     st.pips.forEach((el, k) => el.classList.toggle("is-on", k <= st.days.indexOf(w.day)));
   }
   st.pipFill.style.transform = `scaleX(${w.frac})`;
+  const gap = Math.round(w.vals[2] - w.vals[0]);
+  st.take.textContent = `Gap between calm and windy: ${gap} mph. It grows the further out you look.`;
 
   const hIn = ease.out(seg(p, 0.02, 0.1));
   st.head.style.opacity = hIn;
@@ -125,7 +129,7 @@ function update(p, ctx) {
 }
 
 export default {
-  length: 4,
+  length: 3,
   mount,
   update,
   enter(dir, ctx) {

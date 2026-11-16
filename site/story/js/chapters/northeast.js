@@ -1,10 +1,10 @@
 import { loadNortheast, loadGeo } from "../data.js";
-import { clamp, lerp, seg, ease, smoothstep, loop, el, fmtDow, fmtDate, fmtHour } from "../util.js";
+import { clamp, lerp, seg, ease, smoothstep, loop, autoplay, el, fmtDow, fmtDate, fmtHour } from "../util.js";
 import { CITIES } from "../northeast/geo.js";
 
 const FADE = 0.045;
-const T_INTRO = [0.12, 0.3];
-const T_PLAY = [0.3, 0.93];
+const T_PLAY = [0.12, 0.8];
+const INTRO_AT = 0.02;
 
 const MOODS = [
   [4, "the 64 forecasts agree. A sharp map."],
@@ -15,17 +15,21 @@ const MOODS = [
 ];
 
 const moodOf = (spread) => MOODS.find(([max]) => spread < max)[1];
-const bell = (x, c, w) => Math.exp(-(((x - c) / w) ** 2));
 
 export default {
-  length: 6,
+  length: 4.5,
   fade: false,
 
   mount(layer, ctx) {
     this.ctx = ctx;
     this.layer = layer;
     this.p = 0;
+    this.q = 0;
     this.map = null;
+    this.auto = autoplay((q) => {
+      this.q = q;
+      this.apply();
+    }, [{ at: INTRO_AT, to: 1, dur: 3 }]);
     layer.classList.add("ne");
     layer.innerHTML = `
       <div class="ne-stage">
@@ -37,7 +41,6 @@ export default {
         <div class="ne-cloud ne-cloud-b"></div>
         <div class="ne-cloud ne-cloud-c"></div>
       </div>
-      <div class="ne-white" aria-hidden="true"></div>
       <div class="ne-ui">
         <div class="ne-readout">
           <p class="t-kicker">The Northeast</p>
@@ -63,7 +66,6 @@ export default {
       pins: q(".ne-pins"),
       cloudpass: q(".ne-cloudpass"),
       clouds: [...layer.querySelectorAll(".ne-cloud")],
-      white: q(".ne-white"),
       readout: q(".ne-readout"),
       dayNum: q(".ne-day-num"),
       when: q(".ne-when"),
@@ -165,6 +167,7 @@ export default {
   },
 
   enter(dir, ctx) {
+    this.auto.snap(dir < 0 ? 1 : 0);
     ctx.hud.show(false);
     ctx.world.setVisible(true);
     ctx.world.setDim(0);
@@ -197,56 +200,47 @@ export default {
 
   update(p, ctx) {
     this.p = p;
-    const { dom } = this;
-
-    const layerOpacity = clamp((1 - p) / FADE);
-    this.layer.style.opacity = String(layerOpacity);
-
-    const rise = ease.inOut(seg(p, 0, 0.08));
-    ctx.world.setCameraPath("high", "sky", rise);
-    ctx.veil(p < 0.1 ? 1 - seg(p, 0, 0.03) : 0);
-    ctx.world.setVisible(p < 0.105 || p > 1 - FADE);
-
-    const c = seg(p, 0.03, 0.135);
-    const cloudOp = Math.sin(Math.PI * c) ** 0.8;
-    dom.cloudpass.style.opacity = cloudOp.toFixed(3);
-    dom.clouds.forEach((node, k) => {
-      const s = lerp(0.7 + k * 0.15, 2.6 + k * 0.6, ease.in(c) * 0.6 + c * 0.4);
-      node.style.transform = `translate3d(0, ${((0.5 - c) * (18 + k * 10)).toFixed(2)}%, 0) scale(${s.toFixed(3)})`;
-    });
-    dom.white.style.opacity = (0.92 * bell(p, 0.088, 0.022)).toFixed(3);
-
-    this.mapOpacity = smoothstep(0.072, 0.098, p);
-    dom.stage.style.opacity = this.mapOpacity.toFixed(3);
-
+    this.layer.style.opacity = String(clamp((1 - p) / FADE));
+    this.auto.update(p, ctx.reduced);
     this.apply();
   },
 
   apply() {
-    const { map, dom, p, ctx } = this;
-    if (!map || !ctx) return;
+    const { map, dom, p, q, ctx } = this;
+    if (!ctx) return;
 
-    const descend = 1 - ease.out(seg(p, 0.07, 0.13));
-    const k = ease.inOut(seg(p, ...T_INTRO));
-    map.setView(k, descend);
+    ctx.world.setCameraPath("high", "sky", ease.inOut(seg(q, 0, 0.4)));
+    ctx.veil(p < 0.1 ? 1 - seg(p, 0, 0.03) : 0);
+    ctx.world.setVisible(q < 0.55 || p > 1 - FADE);
+    const cloud = Math.sin(Math.PI * seg(q, 0.15, 0.65));
+    dom.cloudpass.style.opacity = (0.8 * cloud).toFixed(3);
+    dom.clouds.forEach((node, k) => {
+      const s = lerp(0.8 + k * 0.1, 1.5 + k * 0.2, seg(q, 0.15, 0.65));
+      node.style.transform = `translate3d(0, ${((0.5 - seg(q, 0.15, 0.65)) * (10 + k * 6)).toFixed(2)}%, 0) scale(${s.toFixed(3)})`;
+    });
+    this.mapOpacity = smoothstep(0.35, 0.55, q);
+    dom.stage.style.opacity = this.mapOpacity.toFixed(3);
+    if (!map) return;
+
+    map.setView(ease.inOut(seg(q, 0.4, 1)), 1 - ease.out(seg(q, 0.35, 0.7)));
 
     const tl = seg(p, ...T_PLAY);
     const lead = lerp(map.leads[0], map.maxLead, tl);
     map.setLead(lead);
-    this.cloudOpacity = smoothstep(0.2, 0.32, p);
+    this.cloudOpacity = smoothstep(0.7, 1, q);
     this.dirty = true;
 
     const days = Math.ceil(map.maxLead / 24);
     const day = Math.min(days, Math.floor(lead / 24) + 1);
     const spread = this.meanSpreadAt(lead);
 
-    const uiIn = smoothstep(0.24, 0.31, p);
+    const uiIn = smoothstep(0.8, 1, q);
     dom.readout.style.opacity = uiIn.toFixed(3);
     dom.readout.style.transform = `translate3d(0, ${((1 - uiIn) * 14).toFixed(1)}px, 0)`;
     dom.timeline.style.opacity = uiIn.toFixed(3);
     dom.timeline.style.transform = `translate3d(0, ${((1 - uiIn) * 18).toFixed(1)}px, 0)`;
 
-    const capIn = smoothstep(0.125, 0.16, p);
+    const capIn = smoothstep(0.55, 0.7, q);
     dom.caption.style.opacity = capIn.toFixed(3);
 
     if (String(day) !== this.text.day) {
@@ -256,9 +250,9 @@ export default {
       if (prev && !ctx.reduced) {
         const up = +this.text.day > +prev ? 1 : -1;
         dom.dayNum.animate([
-          { transform: `translateY(${up * 0.35}em)`, opacity: 0, filter: "blur(6px)" },
-          { transform: "translateY(0)", opacity: 1, filter: "blur(0)" },
-        ], { duration: 420, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+          { transform: `translateY(${up * 0.2}em)`, opacity: 0 },
+          { transform: "translateY(0)", opacity: 1 },
+        ], { duration: 300, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
       }
     }
 
@@ -269,10 +263,10 @@ export default {
       dom.when.textContent = when;
     }
 
-    const caption = p < 0.2
-      ? "Zoom out: Harvard is one pin on a big map."
-      : p < 0.4
-        ? "Color is temperature. The gray haze is not real fog: it covers places where the 64 forecasts disagree."
+    const caption = tl < 0.1
+      ? "Colors show the middle forecast's temperature. Gray haze marks places where the 64 forecasts disagree. It is not real fog."
+      : tl > 0.9
+        ? "By week two, most of the region is uncertain, not just Harvard."
         : `Day ${day}: ${moodOf(spread)}`;
     this.setCaption(caption);
 
@@ -280,7 +274,7 @@ export default {
     dom.fill.style.clipPath = `inset(0 ${(100 - x).toFixed(3)}% 0 0)`;
     dom.playhead.style.left = `${x.toFixed(3)}%`;
 
-    const pinIn = smoothstep(0.1, 0.14, p);
+    const pinIn = smoothstep(0.5, 0.7, q);
     for (const pin of this.pins) {
       const s = map.sample(pin.lon, pin.lat);
       const lo = Math.round(s.temp - s.spread / 2);
@@ -290,7 +284,7 @@ export default {
         pin.text = txt;
         pin.range.textContent = txt;
       }
-      pin.fade = pinIn * (pin.home ? 1 : smoothstep(0.24, 0.3, p));
+      pin.fade = pinIn * (pin.home ? 1 : smoothstep(0.8, 1, q));
     }
   },
 

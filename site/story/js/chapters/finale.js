@@ -1,15 +1,15 @@
 import { skyState } from "../world/astro.js";
-import { lerp, seg, ease } from "../util.js";
+import { lerp, seg, ease, autoplay } from "../util.js";
 import { targetDay, setStyle, flag } from "../decide/common.js";
 
 const LINES = [
-  { html: "Further out, expect <em>more uncertainty.</em>", at: 0.1 },
-  { html: "Short term, you'll be <em>okay.</em>", at: 0.26 },
-  { html: "When a plan depends on the weather, look at the spread.", at: 0.42 },
-  { html: "Most of the time, you don't <em>really</em> care.", at: 0.54, cls: "is-coda" },
+  { html: "Further out, expect <em>more uncertainty.</em>", sub: "Each day ahead, the 64 forecasts drift further apart.", at: 0.02 },
+  { html: "Short term, you'll be <em>okay.</em>", sub: "For the next day or two, the 64 forecasts still agree closely.", at: 0.14 },
+  { html: "When a plan depends on the weather, look at the spread.", sub: "Check the range or the chance, not just the one number.", at: 0.26 },
+  { html: "Most of the time, you don't <em>really</em> care.", sub: "You can usually wait and decide that morning, when the forecast is sharp.", at: 0.4, cls: "is-coda" },
 ];
-const P_EXPLORE = 0.6;
-const P_CREDITS = 0.7;
+const P_EXPLORE = 0.58;
+const P_CREDITS = 0.72;
 
 const fmtRun = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC", month: "short", day: "numeric", year: "numeric", hour: "2-digit", hourCycle: "h23",
@@ -27,7 +27,7 @@ function goldenHour(data) {
 }
 
 export default {
-  length: 4,
+  length: 2.6,
   interactive: true,
 
   mount(layer, ctx) {
@@ -46,7 +46,7 @@ export default {
       <div class="fn-shade"></div>
       <div class="fn-inner">
         <div class="fn-lines">
-          ${LINES.map((l) => `<p class="fn-line ${l.cls ?? ""}">${l.html.split(" ").map((w) => `<span class="fn-w">${w}</span>`).join(" ")}</p>`).join("")}
+          ${LINES.map((l) => `<div class="fn-item ${l.cls ?? ""}"><p class="fn-line">${l.html}</p><p class="fn-sub">${l.sub}</p></div>`).join("")}
         </div>
         <div class="fn-explore glass">
           <svg class="fn-explore-icon" viewBox="0 0 40 40" aria-hidden="true">
@@ -55,10 +55,10 @@ export default {
             <rect x="19" y="10" width="2" height="22" rx="1" fill="#f4f1ea"/>
           </svg>
           <div class="fn-explore-text">
-            <p class="fn-explore-q">Why does the uncertainty grow every day?</p>
-            <p class="fn-explore-a">See how a tiny difference today turns into a completely different day 15.</p>
+            <p class="fn-explore-q">Play with the butterfly effect yourself</p>
+            <p class="fn-explore-a">Optional: nudge today by a tiny amount and watch day 15 change completely.</p>
           </div>
-          <button type="button" class="btn is-primary fn-explore-go">Explore the butterfly effect</button>
+          <button type="button" class="btn is-primary fn-explore-go">Open the explorer</button>
         </div>
         <footer class="fn-credits">
           <p class="fn-data"><b>Data</b> Google WeatherNext 3 ensemble statistics, run ${data.meta.run} (${run}), Harvard Yard grid point (${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W). Members reconstructed from stored quantiles (p10-p90).</p>
@@ -70,7 +70,7 @@ export default {
           </nav>
         </footer>
       </div>`;
-    this.lines = [...layer.querySelectorAll(".fn-line")].map((node, i) => ({ node, words: [...node.querySelectorAll(".fn-w")], at: LINES[i].at }));
+    this.lines = [...layer.querySelectorAll(".fn-item")].map((node, i) => ({ node, at: LINES[i].at }));
     this.credits = layer.querySelector(".fn-credits");
     this.explore = layer.querySelector(".fn-explore");
     layer.querySelector(".fn-explore-go").addEventListener("click", async () => {
@@ -81,6 +81,7 @@ export default {
       this.chaos.open();
     });
     this.layer = layer;
+    this.auto = autoplay((q) => this.render(q, ctx), [{ at: 0.04, to: 1, dur: 6 }]);
     const pinEnd = () => {
       const section = document.getElementById("ch-finale");
       if (section && scrollY < section.offsetTop - 2 && layer.classList.contains("is-active")) {
@@ -93,7 +94,7 @@ export default {
       layer.classList.add("is-active");
       layer.style.opacity = "1";
       this.enter(1, ctx);
-      this.update(1, ctx);
+      this.auto.snap(1);
     };
     addEventListener("scroll", () => requestAnimationFrame(pinEnd), { passive: true });
     requestAnimationFrame(pinEnd);
@@ -121,29 +122,29 @@ export default {
   },
 
   update(p, ctx) {
-    ctx.veil(1 - ease.out(seg(p, 0, 0.12)));
-    const u = 1 - ease.inOut(seg(p, 0.06, 0.6));
-    for (let k = 0; k < 64; k++) this.members[k] = lerp(this.nearMembers[k], this.farMembers[k], u);
-    ctx.world.setUncertainty(u * 0.95 + 0.05 * (1 - seg(p, 0.6, 0.8)), { members: this.members });
+    this.auto.update(p, ctx.reduced);
+  },
 
-    const reduced = ctx.reduced;
+  render(q, ctx) {
+    ctx.veil(1 - ease.out(seg(q, 0, 0.05)));
+    const u = 1 - ease.inOut(seg(q, 0.02, 0.5));
+    for (let k = 0; k < 64; k++) this.members[k] = lerp(this.nearMembers[k], this.farMembers[k], u);
+    ctx.world.setUncertainty(u * 0.95 + 0.05 * (1 - seg(q, 0.5, 0.7)), { members: this.members });
+
     this.lines.forEach((line, li) => {
-      line.words.forEach((w, i) => {
-        const t = reduced ? (p >= line.at ? 1 : 0) : ease.out(seg(p, line.at + i * 0.012, line.at + 0.1 + i * 0.012));
-        setStyle(w, "opacity", t.toFixed(3));
-        setStyle(w, "transform", `translate3d(0, ${((1 - t) * 0.5).toFixed(3)}em, 0)`);
-        setStyle(w, "filter", `blur(${((1 - t) * 10).toFixed(1)}px)`);
-      });
-      const dim = li < 2 ? 1 - 0.4 * seg(p, LINES[2].at, LINES[2].at + 0.08) : 1;
+      const t = ease.out(seg(q, line.at, line.at + 0.1));
+      setStyle(line.node, "opacity", t.toFixed(3));
+      setStyle(line.node, "transform", `translate3d(0, ${((1 - t) * 14).toFixed(1)}px, 0)`);
+      const dim = li < 2 ? 1 - 0.4 * seg(q, LINES[2].at, LINES[2].at + 0.08) : 1;
       setStyle(line.node, "--dim", dim.toFixed(3));
     });
-    const e = reduced ? (p >= P_EXPLORE ? 1 : 0) : ease.out(seg(p, P_EXPLORE, P_EXPLORE + 0.12));
+    const e = ease.out(seg(q, P_EXPLORE, P_EXPLORE + 0.1));
     setStyle(this.explore, "opacity", e.toFixed(3));
-    setStyle(this.explore, "transform", `translateY(${((1 - e) * 20).toFixed(1)}px)`);
+    setStyle(this.explore, "transform", `translateY(${((1 - e) * 14).toFixed(1)}px)`);
     flag(this.explore, "is-live", e > 0.5);
-    const c = reduced ? (p >= P_CREDITS ? 1 : 0) : ease.out(seg(p, P_CREDITS, P_CREDITS + 0.14));
+    const c = ease.out(seg(q, P_CREDITS, P_CREDITS + 0.12));
     setStyle(this.credits, "opacity", c.toFixed(3));
-    setStyle(this.credits, "transform", `translateY(${((1 - c) * 24).toFixed(1)}px)`);
+    setStyle(this.credits, "transform", `translateY(${((1 - c) * 14).toFixed(1)}px)`);
     flag(this.credits, "is-live", c > 0.5);
   },
 };

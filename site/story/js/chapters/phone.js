@@ -1,4 +1,4 @@
-import { el, seg, lerp, ease, clamp } from "../util.js";
+import { el, seg, lerp, ease, clamp, autoplay } from "../util.js";
 import { buildApp, SCREEN_W, SCREEN_H } from "../phone/app.js";
 
 const BEZEL = 10;
@@ -7,7 +7,7 @@ const DEV_H = SCREEN_H + BEZEL * 2;
 
 let ui = null;
 let geo = null;
-let lastP = 0;
+let auto = null;
 
 function measure() {
   const card = ui.app.tenCard;
@@ -27,16 +27,13 @@ function setO(node, value) {
   if (node.__o !== v) { node.__o = v; node.style.opacity = v; }
 }
 
-const HOLD = 0.88;
-
 const CAPS = [
-  { at: [0.04, 0.42], html: "You check your weather app." },
-  { at: [0.5, 0.8], html: "It shows <em>one</em> temperature for now, and one for each hour ahead." },
-  { at: [0.86, 1.01], html: "Tap the 10-day forecast: one high and one low per day. Simple, and confident." },
+  { at: [0.03, 0.42], html: "You check your weather app." },
+  { at: [0.47, 0.76], html: "It shows <em>one</em> temperature for now, and one for each hour ahead." },
+  { at: [0.84, 1.1], html: "Tap the 10-day forecast: one high and one low per day. Simple, and confident." },
 ];
 
-function render(raw, ctx) {
-  const p = raw <= 0.45 ? raw : Math.min(1, 0.45 + ((raw - 0.45) * 0.55) / (HOLD - 0.45));
+function render(p, ctx) {
   if (!geo) measure();
   const { vw, vh, card } = geo;
   const { app, device, screen, island, glare, backdrop } = ui;
@@ -132,14 +129,14 @@ function render(raw, ctx) {
 
   ui.caps.forEach((node, k) => {
     const [a, b] = CAPS[k].at;
-    const t = Math.min(seg(raw, a, a + 0.05), 1 - seg(raw, b - 0.05, b));
+    const t = Math.min(seg(p, a, a + 0.05), 1 - seg(p, b - 0.05, b));
     setO(node, ease.inOut(t));
     setT(node, `translate3d(0, ${((1 - t) * 12).toFixed(1)}px, 0)`);
   });
 }
 
 export default {
-  length: 5,
+  length: 3,
 
   mount(layer, ctx) {
     const app = buildApp(ctx.data);
@@ -165,7 +162,11 @@ export default {
     layer.append(stage, capWrap);
     layer.classList.add("ph-layer");
     ui = { layer, app, device, screen, island, glare, backdrop, caps };
-    const remeasure = () => { geo = null; render(lastP, ctx); };
+    auto = autoplay((q) => render(q, ctx), [
+      { at: 0.03, to: 0.58, dur: 4.4 },
+      { at: 0.4, to: 1, dur: 4.8 },
+    ]);
+    const remeasure = () => { geo = null; render(auto.q, ctx); };
     window.addEventListener("resize", remeasure);
     document.fonts?.ready.then(remeasure);
     render(0, ctx);
@@ -174,14 +175,15 @@ export default {
   enter(dir, ctx) {
     geo = null;
     ctx.world.setVisible(true);
+    auto.snap(dir < 0 ? 1 : -1);
   },
 
   update(p, ctx) {
-    lastP = p;
-    render(p, ctx);
+    auto.update(p, ctx.reduced);
   },
 
   leave(dir, ctx) {
+    auto.kill();
     if (dir < 0) {
       ctx.world.setDim(0);
       ctx.hud.show(true);

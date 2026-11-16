@@ -206,7 +206,6 @@ export function createMap(canvas, { ne, geo, mobile }) {
     scene.add(l);
     return m;
   };
-  const glowMat = mkLine(4, 0.09, "#8fc4ff");
   const coreMat = mkLine(1.1, 0.7, "#e4efff");
 
   const cloudGeo = new THREE.PlaneGeometry(W, D, 1, 1);
@@ -293,7 +292,6 @@ export function createMap(canvas, { ne, geo, mobile }) {
     linePos.needsUpdate = true;
     const u = smooth(SPREAD_RANGE[0], SPREAD_RANGE[1], spreadAtLead());
     coreMat.opacity = 0.7 - 0.3 * u;
-    glowMat.opacity = 0.09 - 0.04 * u;
     return true;
   }
 
@@ -400,7 +398,7 @@ export function createMap(canvas, { ne, geo, mobile }) {
     renderer.setPixelRatio(dpr);
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    for (const m of [glowMat, coreMat]) m.resolution.set(w * dpr, h * dpr);
+    for (const m of [coreMat]) m.resolution.set(w * dpr, h * dpr);
     fit();
   }
 

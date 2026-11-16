@@ -10,9 +10,9 @@ const RAIN_RATE = 0.2;
 const DRIZZLE_RATE = 0.02;
 const DRIZZLE_DAY = 1;
 const GUSTY = 20;
-const AUTO_ROLLS = [0.3, 0.46, 0.6];
-const P_TRUTH = 0.7;
-const P_LINE = 0.8;
+const AUTO_ROLLS = [0.22, 0.36, 0.5];
+const P_TRUTH = 0.62;
+const P_LINE = 0.72;
 const MIN_ROLLS_FOR_TRUTH = 3;
 
 const CATS = [
@@ -37,7 +37,7 @@ function classify({ peak, total, wind }) {
 }
 
 export default {
-  length: 5.5,
+  length: 4.5,
   interactive: true,
 
   mount(layer, ctx) {
@@ -87,11 +87,13 @@ export default {
       <div class="pt-panel glass">
         <div class="pt-row">
           <button type="button" class="pt-die" aria-label="Roll the weather">
+            <span class="pt-ring" aria-hidden="true"></span>
             <svg class="pt-die-face" viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="14"/><g class="pt-pips">${pipsSvg(5)}</g></svg>
           </button>
           <div class="pt-result" aria-live="polite">
             <p class="pt-res-kicker">Roll the weather</p>
             <p class="pt-res-main">Each roll is one of the 64 forecasts.</p>
+            <p class="pt-hint" aria-hidden="true"><span>&larr;</span> ${ctx.mobile ? "Tap" : "Click"} to roll</p>
           </div>
         </div>
         <div class="pt-tally">
@@ -102,6 +104,7 @@ export default {
           <div class="pt-bar">${this.members.slice().sort((a, b) => CATS.findIndex((c) => c.id === a.cat) - CATS.findIndex((c) => c.id === b.cat))
     .map((m) => `<i style="--c:${CAT[m.cat].color}"></i>`).join("")}</div>
           <p class="pt-truth-l">${CATS.filter((c) => this.truth[c.id]).map((c) => `<span style="--c:${c.color}"><b>${this.truth[c.id]}</b> ${c.label.toLowerCase()}</span>`).join("")}<em>of all 64</em></p>
+          <p class="pt-take">${this.takeText(N)}</p>
         </div>
       </div>`;
 
@@ -119,7 +122,19 @@ export default {
     this.userRolled = false;
     this.autoFired = new Set();
     this.rolling = false;
-    this.die.addEventListener("click", () => { this.userRolled = true; this.roll(); });
+    this.die.addEventListener("click", () => {
+      this.userRolled = true;
+      flag(this.layer, "user-rolled", true);
+      this.roll();
+    });
+  },
+
+  takeText(N) {
+    const wet = 64 - this.truth.dry;
+    const label = CONDITION_LABEL[this.claim.cond];
+    const days = N === 1 ? "a day" : `${numWord(N)} days`;
+    const odds = wet === 0 ? "All 64 forecasts stay dry." : this.truth.dry === 0 ? "All 64 forecasts show some rain." : `${this.truth.dry} of the 64 forecasts stay dry. ${wet} do not.`;
+    return `A party is planned ${days} ahead and is hard to move, so here the spread matters. ${odds} Your app just says "${label}", with no odds.`;
   },
 
   roll() {
