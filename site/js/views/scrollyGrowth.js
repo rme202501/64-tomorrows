@@ -1,6 +1,8 @@
 import { manifest, points } from "../data.js";
-import { frame, responsive, timeAxis, yAxis } from "../chart.js";
-import { SERIES, fmtTime, onThemeChange } from "../theme.js";
+import {
+  frame, responsive, timeAxis, yAxis, updateTimeAxis, updateYAxis, crosshair, stepTransition,
+} from "../chart.js";
+import { SERIES, fmtTime, onThemeChange, tooltip } from "../theme.js";
 import { watchSteps, fillValues } from "../scrolly.js";
 
 // Rising insights: how far apart the forecasts spread, and how that
@@ -29,6 +31,7 @@ export default async function scrollyGrowth(el) {
   const times = m.validTimes;
   const at = (h) => m.leads_h.indexOf(h);
   let state = STATES[0];
+  const tip = tooltip();
 
   const gap = (town, metric, k) => {
     const M = METRICS[metric];
@@ -43,48 +46,101 @@ export default async function scrollyGrowth(el) {
     "growth-cape": Math.round(gap("Cape Cod", "t2m", at(144))),
   });
 
+  // render() builds the chart for a width; update() moves it to the current
+  // step. Lines always hold all 168 h and are clipped to the plot, so changing
+  // how far ahead we look stretches them instead of redrawing.
+  let marks;
+
+  function setDomains(x, y) {
+    const n = m.leads_h.filter((hh) => hh <= state.maxH).length;
+    const max = d3.max(state.places, (town) => d3.max(d3.range(n), (k) => gap(town, state.metric, k)));
+    x.domain([times[0], times[n - 1]]);
+    y.domain([0, max * 1.1]).nice();
+    return n;
+  }
+
   function render(width) {
+    const { g, w, h } = frame(chartEl, width, width < 520 ? 260 : 320,
+      { top: 30, right: width >= 520 ? 110 : 16, bottom: 28, left: 44 });
+    const x = d3.scaleTime().range([0, w]);
+    const y = d3.scaleLinear().range([h, 0]);
+    setDomains(x, y);
+    const yAxes = yAxis(g, y, w, { label: "Gap" });
+    const xAxes = timeAxis(g, x, h, w);
+
+    g.append("clipPath").attr("id", "growth-clip").append("rect").attr("width", w).attr("height", h);
+    const plot = g.append("g").attr("clip-path", "url(#growth-clip)");
+    const jump = plot.append("g").style("opacity", 0);
+    jump.append("rect").attr("y", 0).attr("height", h).attr("fill", "#eb6834").attr("opacity", 0.22);
+    jump.append("text").attr("y", 14).attr("text-anchor", "end").attr("font-size", 12)
+      .attr("fill", "var(--text-primary)")
+      .text(`Tue 13, ${fmtTime(times[at(144)]).replace("Tue ", "")} → ${fmtTime(times[at(150)]).replace("Tue ", "")}`);
+    const lines = plot.append("g");
+    const labels = width >= 520 ? g.append("g").attr("class", "direct-labels") : null;
+    const hoverDots = g.append("g");
+
+    crosshair(g, x, w, h, times, (k, e) => {
+      const { series } = marks;
+      const M = METRICS[state.metric];
+      hoverDots.selectAll("circle").data(series, (d) => d.town).join("circle").attr("r", 4)
+        .attr("class", "hover-dot").attr("fill", (d) => d.color)
+        .attr("cx", x(times[k])).attr("cy", (d) => y(d.values[k])).style("opacity", 1);
+      const rows = [...series].sort((a, b) => b.values[k] - a.values[k])
+        .map((d) => `<span style="color:${d.color}">●</span> ${d.town}: <b>${d.values[k].toFixed(1)} ${M.unit}</b>`);
+      tip.show(`<b>${fmtTime(times[k])}</b> · ${m.leads_h[k]} h ahead<br>${rows.join("<br>")}`, e.clientX, e.clientY);
+    }, () => {
+      hoverDots.selectAll("circle").style("opacity", 0);
+      tip.hide();
+    });
+
+    marks = { x, y, w, h, xAxes, yAxes, jump, lines, labels };
+    update(false);
+  }
+
+  function update(animate) {
+    if (!marks) return;
+    const { x, y, w, h } = marks;
+    const t = stepTransition(animate);
     const M = METRICS[state.metric];
     const colors = SERIES();
-    const n = m.leads_h.filter((hh) => hh <= state.maxH).length;
-    const ts = times.slice(0, n);
-    const series = state.places.map((town, i) => ({
+    const n = setDomains(x, y);
+    updateTimeAxis(marks.xAxes, x, h, w, t);
+    updateYAxis(marks.yAxes, y, w, {}, t);
+    marks.yAxes.label.text(`Gap between 1-in-10 high and low (${M.unit})`);
+
+    const series = state.places.map((town) => ({
       town,
-      color: colors[PLACES.indexOf(town)] ?? colors[i],
-      values: Array.from({ length: n }, (_, k) => gap(town, state.metric, k)),
+      color: colors[PLACES.indexOf(town)],
+      values: times.map((_, k) => gap(town, state.metric, k)),
     }));
-    const multi = series.length > 1;
-    const { g, w, h } = frame(chartEl, width, width < 520 ? 260 : 320,
-      { top: 30, right: multi && width >= 520 ? 110 : 16, bottom: 28, left: 44 });
-    const x = d3.scaleTime().domain(d3.extent(ts)).range([0, w]);
-    const y = d3.scaleLinear().domain([0, d3.max(series, (s) => d3.max(s.values)) * 1.1]).nice().range([h, 0]);
-    yAxis(g, y, w, { label: `Gap between 1-in-10 high and low (${M.unit})` });
-    timeAxis(g, x, h, w);
+    marks.series = series;
 
-    if (state.jump) {
-      const x1 = x(times[at(144)]);
-      const x2 = x(times[at(150)]);
-      g.append("rect").attr("class", "fade-in").attr("x", x1).attr("y", 0).attr("width", x2 - x1)
-        .attr("height", h).attr("fill", "#eb6834").attr("opacity", 0.22);
-      g.append("text").attr("x", x1 - 6).attr("y", 14).attr("text-anchor", "end")
-        .attr("font-size", 12).attr("fill", "var(--text-primary)")
-        .text(`Tue 13, ${fmtTime(times[at(144)]).replace("Tue ", "")} → ${fmtTime(times[at(150)]).replace("Tue ", "")}`);
-    }
+    const line = d3.line().x((_, i) => x(times[i])).y((d) => y(d)).curve(d3.curveMonotoneX);
+    marks.lines.selectAll("path").data(series, (d) => d.town).join(
+      (enter) => enter.append("path").attr("class", "line").attr("opacity", 0).attr("d", (d) => line(d.values)),
+      (upd) => upd,
+      (exit) => exit.transition(t).attr("opacity", 0).remove(),
+    ).attr("stroke", (d) => d.color)
+      .transition(t).attr("opacity", 1).attr("d", (d) => line(d.values));
 
-    const line = d3.line().x((_, i) => x(ts[i])).y((d) => y(d)).curve(d3.curveMonotoneX);
-    g.selectAll("path.series").data(series).join("path").attr("class", "line series fade-in")
-      .attr("stroke", (d) => d.color).attr("d", (d) => line(d.values));
+    const x1 = x(times[at(144)]);
+    const x2 = x(times[at(150)]);
+    marks.jump.transition(t).style("opacity", state.jump ? 1 : 0);
+    marks.jump.select("rect").transition(t).attr("x", x1).attr("width", x2 - x1);
+    marks.jump.select("text").transition(t).attr("x", x1 - 6);
 
-    if (multi && width >= 520) {
-      const last = n - 1;
-      const ys = series.map((s) => y(s.values[last]));
-      const placed = dodge(ys, 14);
-      g.append("g").attr("class", "direct-labels").selectAll("text").data(series).join("text")
-        .attr("x", w + 8).attr("y", (_, i) => placed[i] + 4).text((d) => d.town);
+    if (marks.labels) {
+      const placed = dodge(series.map((s) => y(s.values[n - 1])), 14);
+      marks.labels.selectAll("text").data(series, (d) => d.town).join(
+        (enter) => enter.append("text").attr("x", w + 8).attr("y", (_, i) => placed[i] + 4).attr("opacity", 0)
+          .text((d) => d.town),
+        (upd) => upd,
+        (exit) => exit.transition(t).attr("opacity", 0).remove(),
+      ).transition(t).attr("y", (_, i) => placed[i] + 4).attr("opacity", 1);
     }
 
     d3.select(legendEl).selectAll("*").remove();
-    if (multi) {
+    if (series.length > 1) {
       d3.select(legendEl).append("div").attr("class", "legend-swatches")
         .selectAll("span").data(series).join("span")
         .html((d) => `<i class="line-swatch" style="background:${d.color}"></i>${d.town}`);
@@ -95,7 +151,7 @@ export default async function scrollyGrowth(el) {
   onThemeChange(draw);
   watchSteps(el, (i) => {
     state = STATES[i];
-    draw();
+    update(true);
   });
 }
 
