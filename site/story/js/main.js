@@ -16,6 +16,12 @@ export const CHAPTERS = [
   "northeast", "care", "jacket", "party", "finale",
 ];
 
+const TITLES = {
+  hero: "64 Tomorrows", phone: "Your weather app", grid64: "64 forecasts", spread: "The spread grows", why: "Why it happens",
+  wind: "Wind", lying: "One number", pdfs: "A whole curve", plinko: "Simulate the weather", northeast: "The Northeast",
+  care: "Do you care?", jacket: "Walking to class", party: "A lawn party", finale: "Takeaways",
+};
+
 const FADE_VH = 0.45;
 const SMOOTH_S = 0.12;
 
@@ -117,7 +123,9 @@ async function boot() {
     layers.append(layer);
     const dot = document.createElement("button");
     dot.type = "button";
-    dot.setAttribute("aria-label", id);
+    const title = TITLES[id] ?? id;
+    dot.setAttribute("aria-label", title);
+    dot.dataset.title = title;
     dot.addEventListener("click", () => ctx.scrollToChapter(id));
     nav.append(dot);
     return { id, mod, section, layer, dot, mounted: false, active: false, progress: 0, target: 0, shown: 0, span: 1, opacity: "" };
@@ -219,6 +227,14 @@ async function boot() {
       },
     });
   });
+
+  const bar = document.getElementById("progress-bar");
+  const syncBar = () => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    bar.style.transform = `scaleX(${max > 0 ? clamp(scrollY / max).toFixed(4) : 0})`;
+  };
+  addEventListener("scroll", syncBar, { passive: true });
+  syncBar();
 
   let resizeTimer;
   window.addEventListener("resize", () => {

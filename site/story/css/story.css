@@ -97,7 +97,45 @@ body {
 }
 #progress button.is-active { background: var(--accent); border-color: var(--accent); transform: scale(1.5); }
 #progress button.is-done { background: var(--ink-3); }
-@media (max-width: 720px) { #progress { display: none; } }
+#progress button { position: relative; }
+#progress button::after {
+  content: attr(data-title);
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translate(6px, -50%);
+  transform-origin: right center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--glass-strong);
+  border: 1px solid var(--line);
+  font: 500 12px/1 var(--sans);
+  color: var(--ink);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s var(--ease-out);
+}
+#progress button.is-active::after { right: 14px; transform: translate(4px, -50%) scale(0.667); }
+#progress button:hover::after, #progress button:focus-visible::after { opacity: 1; transform: translate(0, -50%); }
+#progress button.is-active:hover::after, #progress button.is-active:focus-visible::after { transform: translate(0, -50%) scale(0.667); }
+#progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 11;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  pointer-events: none;
+  display: none;
+}
+@media (max-width: 720px) {
+  #progress { display: none; }
+  #progress-bar { display: block; }
+}
 
 #old-site {
   position: fixed;
